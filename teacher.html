@@ -6,7 +6,7 @@
 <title>DTAI Attendance — Teacher</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="roster.js"></script>
 <script src="firebase-config.js"></script>
 <style>
@@ -56,8 +56,9 @@
     <div id="qrBox">
       <div class="link-code" id="sessionCodeDisplay"></div>
       <div style="height:16px"></div>
-      <canvas id="qrCanvas"></canvas>
+      <div id="qrCanvas"></div>
       <div style="color:#666; font-size:13px; margin-top:12px;">Scan to mark attendance</div>
+      <div id="qrFallback" style="margin-top:10px; font-size:12px; color:#999; word-break:break-all; text-align:center;"></div>
     </div>
     <div class="stat-row">
       <div class="stat-item">
@@ -118,7 +119,15 @@ document.getElementById('startBtn').onclick = async () => {
   document.getElementById('sessionCodeDisplay').textContent = currentSessionId;
 
   const studentUrl = location.href.replace('teacher.html', 'student.html') + '?session=' + currentSessionId;
-  QRCode.toCanvas(document.getElementById('qrCanvas'), studentUrl, { width: 260 });
+  const qrEl = document.getElementById('qrCanvas');
+  const fallbackEl = document.getElementById('qrFallback');
+  qrEl.innerHTML = '';
+  try {
+    if (typeof QRCode === 'undefined') throw new Error('QR library not loaded');
+    new QRCode(qrEl, { text: studentUrl, width: 260, height: 260 });
+  } catch (err) {
+    fallbackEl.innerHTML = 'QR code failed to load. Share this link instead:<br><a href="' + studentUrl + '">' + studentUrl + '</a>';
+  }
 
   sessionRef.child('checkins').on('value', (snap) => {
     const checkins = snap.val() || {};
