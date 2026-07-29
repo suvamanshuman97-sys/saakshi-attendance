@@ -545,8 +545,15 @@ async function loadHistory() {
   listEl.innerHTML = '<div class="empty-state">Loading…</div>';
   document.getElementById('historyDetailCard').classList.add('hidden');
 
-  const snap = await db.ref('sessions').once('value');
-  const sessions = snap.val() || {};
+  let sessions;
+  try {
+    const snap = await db.ref('sessions').once('value');
+    sessions = snap.val() || {};
+  } catch (err) {
+    listEl.innerHTML = '<div class="empty-state">Could not load data. Check your Firebase database rules allow reading "sessions".</div>';
+    return;
+  }
+
   const ids = Object.keys(sessions).sort((a, b) => (sessions[b].createdAt || 0) - (sessions[a].createdAt || 0));
 
   if (ids.length === 0) {
@@ -584,10 +591,17 @@ function showHistoryDetail(sessionId, data) {
 async function loadDashboard() {
   const body = document.getElementById('dashboardBody');
   const summary = document.getElementById('dashboardSummary');
-  body.innerHTML = '<tr><td colspan="5" class="empty-state">Loading…</td></tr>';
+  body.innerHTML = '<tr><td colspan="4" class="empty-state">Loading…</td></tr>';
 
-  const snap = await db.ref('sessions').once('value');
-  const sessions = snap.val() || {};
+  let sessions;
+  try {
+    const snap = await db.ref('sessions').once('value');
+    sessions = snap.val() || {};
+  } catch (err) {
+    body.innerHTML = '<tr><td colspan="4" class="empty-state">Could not load data. Check your Firebase database rules allow reading "sessions".</td></tr>';
+    return;
+  }
+
   const closedSessions = Object.values(sessions).filter(s => s.status === 'closed');
 
   summary.textContent = closedSessions.length + ' closed session' + (closedSessions.length === 1 ? '' : 's') + ' recorded';
