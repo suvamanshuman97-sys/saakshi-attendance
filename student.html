@@ -10,24 +10,26 @@
 <script src="firebase-config.js"></script>
 <style>
   * { box-sizing: border-box; }
-  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; background:#f5f5f2; margin:0; padding:0; color:#1a1a1a; }
-  .wrap { max-width: 480px; margin: 0 auto; padding: 20px; min-height:100vh; }
-  h1 { font-size: 19px; font-weight:600; margin-bottom:2px; }
-  .sub { color:#666; font-size:13px; margin-bottom:20px; }
-  input[type=text] { width:100%; padding:14px; font-size:16px; border:1px solid #ccc; border-radius:10px; margin-bottom:12px; }
+  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; background:#faf9f6; margin:0; padding:0; color:#1a1a1a; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 24px 20px; min-height:100vh; }
+  h1 { font-size: 20px; font-weight:600; margin-bottom:2px; letter-spacing:-0.01em; }
+  .sub { color:#5a5a58; font-size:13px; margin-bottom:22px; }
+  input[type=text] { width:100%; padding:14px 16px; font-size:16px; border:1px solid #e6e4de; border-radius:10px; margin-bottom:12px; background:white; }
+  input[type=text]:focus { outline:none; border-color:#b5541f; }
   .list { max-height: 55vh; overflow-y:auto; }
-  .item { padding:14px 16px; background:white; border:1px solid #e5e5e5; border-radius:10px; margin-bottom:8px; cursor:pointer; }
-  .item:active { background:#f0f0f0; }
+  .item { padding:14px 16px; background:white; border:1px solid #e6e4de; border-radius:10px; margin-bottom:8px; cursor:pointer; transition:border-color 0.1s; }
+  .item:active { background:#f4f3ef; border-color:#b5541f; }
   .item .name { font-weight:500; font-size:15px; }
-  .item .roll { color:#999; font-size:12px; }
+  .item .roll { color:#9a9a96; font-size:12px; margin-top:2px; }
   .center { text-align:center; padding: 60px 20px; }
   .icon { font-size: 48px; margin-bottom: 16px; }
   .msg { font-size: 18px; font-weight:600; margin-bottom:8px; }
-  .msg-sub { color:#666; font-size:14px; }
+  .msg-sub { color:#5a5a58; font-size:14px; }
   .hidden { display:none; }
-  .confirmBtn { width:100%; padding:14px; background:#1a1a1a; color:white; border:none; border-radius:10px; font-size:16px; font-weight:500; margin-top:12px; }
-  .cancelBtn { width:100%; padding:12px; background:white; color:#666; border:1px solid #ccc; border-radius:10px; font-size:14px; margin-top:8px; }
-  .selectedCard { background:white; border:1px solid #e5e5e5; border-radius:12px; padding:20px; text-align:center; margin-bottom:12px; }
+  .confirmBtn { width:100%; padding:15px; background:#b5541f; color:white; border:none; border-radius:10px; font-size:16px; font-weight:500; margin-top:14px; }
+  .confirmBtn:active { opacity:0.85; }
+  .cancelBtn { width:100%; padding:12px; background:white; color:#5a5a58; border:1px solid #e6e4de; border-radius:10px; font-size:14px; margin-top:8px; }
+  .selectedCard { background:white; border:1px solid #e6e4de; border-radius:12px; padding:22px; text-align:center; margin-bottom:12px; }
 </style>
 </head>
 <body>
@@ -150,7 +152,8 @@ document.getElementById('confirmBtn').onclick = async () => {
   const checkins = data.checkins || {};
 
   if (checkins[selectedStudent.roll]) {
-    document.getElementById('doneSub').textContent = selectedStudent.name + ' was already marked present.';
+    const already = checkins[selectedStudent.roll];
+    document.getElementById('doneSub').textContent = selectedStudent.name + ' was already marked ' + (already.late ? 'late' : 'present') + '.';
     show('doneState');
     return;
   }
@@ -160,12 +163,17 @@ document.getElementById('confirmBtn').onclick = async () => {
     return;
   }
 
+  const now = Date.now();
+  const lateThresholdMs = (data.lateMinutes || 0) * 60 * 1000;
+  const isLate = data.createdAt && lateThresholdMs > 0 && (now - data.createdAt) > lateThresholdMs;
+
   await sessionRef.child('checkins/' + selectedStudent.roll).set({
     name: selectedStudent.name,
-    time: Date.now()
+    time: now,
+    late: isLate
   });
 
-  document.getElementById('doneSub').textContent = selectedStudent.name + ', you\'re marked present for ' + data.date + '.';
+  document.getElementById('doneSub').textContent = selectedStudent.name + ', you\'re marked ' + (isLate ? 'late' : 'present') + ' for ' + data.date + '.';
   show('doneState');
 };
 

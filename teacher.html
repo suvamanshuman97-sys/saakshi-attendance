@@ -10,33 +10,135 @@
 <script src="roster.js"></script>
 <script src="firebase-config.js"></script>
 <style>
+  :root {
+    --ink: #1a1a1a;
+    --ink-soft: #5a5a58;
+    --ink-faint: #9a9a96;
+    --paper: #faf9f6;
+    --card: #ffffff;
+    --line: #e6e4de;
+    --accent: #b5541f;
+    --accent-soft: #f4e6dc;
+    --good: #2e7d32;
+    --good-soft: #e8f3e8;
+    --bad: #b03030;
+    --bad-soft: #fbeaea;
+    --radius: 12px;
+  }
   * { box-sizing: border-box; }
-  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; background:#f5f5f2; margin:0; padding:20px; color:#1a1a1a; }
-  .wrap { max-width: 900px; margin: 0 auto; }
-  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
-  .sub { color: #666; font-size: 14px; margin-bottom: 24px; }
-  .card { background: white; border: 1px solid #e0e0e0; border-radius: 12px; padding: 24px; margin-bottom: 16px; }
-  label { display:block; font-size: 13px; color:#555; margin-bottom:6px; font-weight:500; }
-  input[type=number], input[type=date], input[type=text] { width: 100%; padding: 10px 12px; font-size: 15px; border:1px solid #ccc; border-radius: 8px; margin-bottom: 16px; }
-  button { background:#1a1a1a; color:white; border:none; padding:12px 20px; border-radius:8px; font-size:15px; cursor:pointer; font-weight:500; }
-  button:hover { background:#333; }
-  button.secondary { background:white; color:#1a1a1a; border:1px solid #ccc; }
-  button:disabled { opacity:0.4; cursor:not-allowed; }
-  .row { display:flex; gap:12px; flex-wrap:wrap; }
-  #qrBox { display:flex; flex-direction:column; align-items:center; padding: 32px; }
-  #qrCanvas { margin-bottom: 16px; }
-  .stat { font-size: 42px; font-weight:700; }
-  .stat-label { color:#666; font-size:14px; }
-  .stat-row { display:flex; gap: 40px; justify-content:center; margin: 20px 0; }
-  .stat-item { text-align:center; }
-  .list { max-height: 320px; overflow-y:auto; border:1px solid #eee; border-radius:8px; }
-  .list-row { display:flex; justify-content:space-between; padding:8px 14px; border-bottom:1px solid #f0f0f0; font-size:14px; }
-  .list-row:last-child { border-bottom:none; }
-  .present { color: #2e7d32; }
-  .absent { color: #c62828; }
-  .hidden { display:none; }
-  .warn { background:#fff8e1; border:1px solid #ffe082; padding:12px 16px; border-radius:8px; font-size:13px; color:#8a6d00; margin-bottom:16px; }
-  .link-code { font-family: monospace; font-size: 20px; background:#f0f0f0; padding:8px 14px; border-radius:6px; letter-spacing:2px; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--paper);
+    margin: 0;
+    padding: 24px 20px 60px;
+    color: var(--ink);
+  }
+  .wrap { max-width: 880px; margin: 0 auto; }
+  h1 { font-size: 24px; font-weight: 600; margin: 0 0 2px; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-soft); font-size: 14px; margin-bottom: 22px; }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
+  .tab {
+    padding: 10px 18px; font-size: 14px; font-weight: 500; color: var(--ink-faint);
+    cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab.active { color: var(--accent); border-color: var(--accent); }
+  .tab:hover:not(.active) { color: var(--ink); }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 28px; margin-bottom: 16px;
+  }
+
+  label { display: block; font-size: 13px; color: var(--ink-soft); margin-bottom: 6px; font-weight: 500; }
+  input[type=number], input[type=date], input[type=text] {
+    width: 100%; padding: 11px 14px; font-size: 15px; border: 1px solid var(--line);
+    border-radius: 8px; margin-bottom: 18px; background: var(--paper); color: var(--ink);
+  }
+  input:focus { outline: none; border-color: var(--accent); }
+
+  button {
+    background: var(--ink); color: white; border: none; padding: 12px 22px;
+    border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 500;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  button:hover { opacity: 0.85; }
+  button:active { transform: scale(0.98); }
+  button.secondary { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  button.accent { background: var(--accent); }
+  button:disabled { opacity: 0.35; cursor: not-allowed; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  #qrBox { display: flex; flex-direction: column; align-items: center; padding: 12px; }
+  #qrCanvas { padding: 16px; background: white; border-radius: 10px; border: 1px solid var(--line); position: relative; }
+  #qrCanvas img { display: block; }
+  .qr-ring-wrap { position: relative; width: 260px; height: 260px; margin: 0 auto; }
+  .qr-progress {
+    position: absolute; top: -6px; left: -6px; width: calc(100% + 12px); height: calc(100% + 12px);
+    pointer-events: none;
+  }
+
+  .stat-row { display: flex; gap: 32px; justify-content: center; margin: 22px 0 18px; }
+  .stat-item { text-align: center; }
+  .stat { font-size: 40px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
+  .stat-label { color: var(--ink-soft); font-size: 13px; margin-top: 6px; }
+
+  .list { max-height: 340px; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; }
+  .list-row {
+    display: flex; align-items: center; justify-content: space-between; padding: 10px 16px;
+    border-bottom: 1px solid var(--line); font-size: 14px;
+  }
+  .list-row:last-child { border-bottom: none; }
+  .list-row .name-block { display: flex; align-items: center; gap: 10px; }
+  .list-row .roll { color: var(--ink-faint); font-size: 12px; }
+  .badge {
+    font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.02em;
+  }
+  .badge.present { background: var(--good-soft); color: var(--good); }
+  .badge.absent { background: var(--bad-soft); color: var(--bad); }
+  .badge.late { background: #fff3d9; color: #9a6a00; }
+
+  .override-btn {
+    font-size: 12px; padding: 5px 12px; border-radius: 6px; font-weight: 500;
+    background: transparent; border: 1px solid var(--line); color: var(--ink-soft);
+  }
+  .override-btn:hover { border-color: var(--ink-faint); color: var(--ink); opacity: 1; }
+
+  .warn {
+    background: var(--accent-soft); border: 1px solid #e0bd9e; padding: 12px 16px;
+    border-radius: 8px; font-size: 13px; color: var(--accent); margin-bottom: 16px;
+  }
+  .link-code {
+    font-family: "SF Mono", Menlo, monospace; font-size: 15px; background: var(--paper);
+    padding: 6px 12px; border-radius: 6px; letter-spacing: 0.5px; color: var(--ink-soft);
+    border: 1px solid var(--line);
+  }
+  .hidden { display: none !important; }
+
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .metric-card { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+  .metric-card .num { font-size: 26px; font-weight: 700; }
+  .metric-card .lbl { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 12px; color: var(--ink-soft); font-weight: 500; padding: 8px 14px; background: var(--paper); }
+  th.right, td.right { text-align: right; }
+  th.center, td.center { text-align: center; }
+  td { padding: 9px 14px; font-size: 14px; border-top: 1px solid var(--line); }
+  .pct-good { color: var(--good); font-weight: 600; }
+  .pct-warn { color: #9a6a00; font-weight: 600; }
+  .pct-bad { color: var(--bad); font-weight: 600; }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-faint); font-size: 14px; }
+  .session-row {
+    display: flex; align-items: center; justify-content: space-between; padding: 12px 16px;
+    border-bottom: 1px solid var(--line); font-size: 14px; cursor: pointer;
+  }
+  .session-row:hover { background: var(--paper); }
+  .session-row:last-child { border-bottom: none; }
+  .session-meta { color: var(--ink-soft); font-size: 12px; }
 </style>
 </head>
 <body>
@@ -44,49 +146,113 @@
   <h1>DTAI Section A — Attendance</h1>
   <div class="sub">Teacher control panel</div>
 
-  <div id="setupCard" class="card">
-    <label for="sessionDate">Session date</label>
-    <input type="date" id="sessionDate">
-    <label for="headcount">Expected headcount (count the room first)</label>
-    <input type="number" id="headcount" min="1" max="65" placeholder="e.g. 58">
-    <button id="startBtn">Start session &amp; generate QR</button>
+  <div class="tabs">
+    <div class="tab active" data-tab="live">Live session</div>
+    <div class="tab" data-tab="history">History</div>
+    <div class="tab" data-tab="dashboard">Dashboard</div>
   </div>
 
-  <div id="liveCard" class="card hidden">
-    <div id="qrBox">
-      <div class="link-code" id="sessionCodeDisplay"></div>
-      <div style="height:16px"></div>
-      <div id="qrCanvas"></div>
-      <div style="color:#666; font-size:13px; margin-top:12px;">Scan to mark attendance</div>
-      <div id="qrFallback" style="margin-top:10px; font-size:12px; color:#999; word-break:break-all; text-align:center;"></div>
+  <!-- LIVE TAB -->
+  <div id="tab-live">
+    <div id="setupCard" class="card">
+      <label for="sessionDate">Session date</label>
+      <input type="date" id="sessionDate">
+      <label for="headcount">Expected headcount (count the room first)</label>
+      <input type="number" id="headcount" min="1" max="65" placeholder="e.g. 58">
+      <label for="lateMinutes">Mark late after (minutes from session start)</label>
+      <input type="number" id="lateMinutes" min="0" max="60" value="10">
+      <button id="startBtn">Start session &amp; generate QR</button>
     </div>
-    <div class="stat-row">
-      <div class="stat-item">
-        <div class="stat" id="checkedInCount">0</div>
-        <div class="stat-label">Checked in</div>
+
+    <div id="liveCard" class="card hidden">
+      <div id="qrBox">
+        <div class="link-code" id="sessionCodeDisplay"></div>
+        <div style="height:18px"></div>
+        <div class="qr-ring-wrap">
+          <svg class="qr-progress" viewBox="0 0 272 272">
+            <circle cx="136" cy="136" r="130" fill="none" stroke="var(--line)" stroke-width="3"/>
+            <circle id="qrRingProgress" cx="136" cy="136" r="130" fill="none" stroke="var(--accent)" stroke-width="3"
+              stroke-linecap="round" transform="rotate(-90 136 136)"/>
+          </svg>
+          <div id="qrCanvas"></div>
+        </div>
+        <div style="color:var(--ink-soft); font-size:13px; margin-top:14px;">Scan to mark attendance · code refreshes automatically</div>
+        <div id="qrFallback" style="margin-top:10px; font-size:12px; color:var(--ink-faint); word-break:break-all; text-align:center;"></div>
       </div>
-      <div class="stat-item">
-        <div class="stat" id="capCount">0</div>
-        <div class="stat-label">Expected cap</div>
+      <div class="stat-row">
+        <div class="stat-item">
+          <div class="stat" id="checkedInCount" style="color:var(--good);">0</div>
+          <div class="stat-label">Checked in</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat" id="capCount">0</div>
+          <div class="stat-label">Expected cap</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat" id="lateCount" style="color:#9a6a00;">0</div>
+          <div class="stat-label">Marked late</div>
+        </div>
+      </div>
+      <div id="capWarning" class="warn hidden">Cap reached — no more scans will be accepted.</div>
+      <div class="row">
+        <button id="pingToggleBtn" class="secondary">Sound: on</button>
+        <button id="closeBtn" class="secondary">Close session &amp; review</button>
       </div>
     </div>
-    <div id="capWarning" class="warn hidden">Cap reached — no more scans will be accepted.</div>
-    <div class="row">
-      <button id="closeBtn" class="secondary">Close session &amp; review</button>
+
+    <div id="reviewCard" class="card hidden">
+      <h3 style="margin-top:0;">Review</h3>
+      <div class="metric-grid">
+        <div class="metric-card"><div class="num" id="presentTotal" style="color:var(--good);">0</div><div class="lbl">Present</div></div>
+        <div class="metric-card"><div class="num" id="lateTotal" style="color:#9a6a00;">0</div><div class="lbl">Late</div></div>
+        <div class="metric-card"><div class="num" id="absentTotal" style="color:var(--bad);">0</div><div class="lbl">Absent</div></div>
+      </div>
+      <div style="font-weight:500; margin-bottom:8px; font-size:14px;">All students — tap to override</div>
+      <div class="list" id="fullList"></div>
+      <div class="row" style="margin-top:18px;">
+        <button id="exportBtn" class="accent">Export CSV</button>
+        <button id="newSessionBtn" class="secondary">Start new session</button>
+      </div>
     </div>
   </div>
 
-  <div id="reviewCard" class="card hidden">
-    <h3>Review</h3>
-    <div class="row" style="margin-bottom:16px;">
-      <div><strong id="presentTotal">0</strong> present</div>
-      <div><strong id="absentTotal">0</strong> absent / not scanned</div>
+  <!-- HISTORY TAB -->
+  <div id="tab-history" class="hidden">
+    <div class="card">
+      <h3 style="margin-top:0;">Past sessions</h3>
+      <div id="historyList" class="list"><div class="empty-state">Loading…</div></div>
     </div>
-    <div style="font-weight:500; margin-bottom:8px;">Not checked in (cross-check visually):</div>
-    <div class="list" id="absentList"></div>
-    <div class="row" style="margin-top:16px;">
-      <button id="exportBtn">Export CSV</button>
-      <button id="newSessionBtn" class="secondary">Start new session</button>
+    <div id="historyDetailCard" class="card hidden">
+      <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h3 style="margin:0;" id="historyDetailTitle">Session</h3>
+        <button class="secondary" id="historyExportBtn">Export CSV</button>
+      </div>
+      <div class="metric-grid">
+        <div class="metric-card"><div class="num" id="hPresentTotal" style="color:var(--good);">0</div><div class="lbl">Present</div></div>
+        <div class="metric-card"><div class="num" id="hLateTotal" style="color:#9a6a00;">0</div><div class="lbl">Late</div></div>
+        <div class="metric-card"><div class="num" id="hAbsentTotal" style="color:var(--bad);">0</div><div class="lbl">Absent</div></div>
+      </div>
+      <div class="list" id="historyDetailList"></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD TAB -->
+  <div id="tab-dashboard" class="hidden">
+    <div class="card">
+      <h3 style="margin-top:0;">Attendance dashboard</h3>
+      <div class="sub" id="dashboardSummary" style="margin-bottom:16px;"></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th class="center">Present</th>
+            <th class="center">Late</th>
+            <th class="center">Sessions</th>
+            <th class="right">Attendance</th>
+          </tr>
+        </thead>
+        <tbody id="dashboardBody"></tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -95,87 +261,300 @@
 const db = firebase.database();
 let currentSessionId = null;
 let sessionRef = null;
+let qrRotationTimer = null;
+let sessionCheckinsListener = null;
+let soundOn = true;
+let knownCheckins = new Set();
+const QR_ROTATE_SECONDS = 45;
 
+// ---------- Tabs ----------
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    ['live','history','dashboard'].forEach(name => {
+      document.getElementById('tab-' + name).classList.toggle('hidden', name !== tab.dataset.tab);
+    });
+    if (tab.dataset.tab === 'history') loadHistory();
+    if (tab.dataset.tab === 'dashboard') loadDashboard();
+  };
+});
+
+// ---------- Sound ----------
+function beep() {
+  if (!soundOn) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    osc.start(); osc.stop(ctx.currentTime + 0.15);
+  } catch (e) {}
+}
+document.getElementById('pingToggleBtn').onclick = (e) => {
+  soundOn = !soundOn;
+  e.target.textContent = 'Sound: ' + (soundOn ? 'on' : 'off');
+};
+
+// ---------- Live session ----------
 document.getElementById('sessionDate').valueAsDate = new Date();
 
 document.getElementById('startBtn').onclick = async () => {
   const date = document.getElementById('sessionDate').value;
   const cap = parseInt(document.getElementById('headcount').value, 10);
+  const lateMinutes = parseInt(document.getElementById('lateMinutes').value, 10) || 0;
   if (!date || !cap) { alert('Enter date and headcount'); return; }
 
   currentSessionId = date + '_' + Date.now();
   sessionRef = db.ref('sessions/' + currentSessionId);
+  const startedAt = Date.now();
   await sessionRef.set({
     date: date,
     cap: cap,
-    createdAt: Date.now(),
+    lateMinutes: lateMinutes,
+    createdAt: startedAt,
     status: 'open',
     checkins: {}
   });
 
+  knownCheckins = new Set();
   document.getElementById('setupCard').classList.add('hidden');
   document.getElementById('liveCard').classList.remove('hidden');
   document.getElementById('capCount').textContent = cap;
   document.getElementById('sessionCodeDisplay').textContent = currentSessionId;
 
-  const studentUrl = location.href.replace('teacher.html', 'student.html') + '?session=' + currentSessionId;
-  const qrEl = document.getElementById('qrCanvas');
-  const fallbackEl = document.getElementById('qrFallback');
-  qrEl.innerHTML = '';
-  try {
-    if (typeof QRCode === 'undefined') throw new Error('QR library not loaded');
-    new QRCode(qrEl, { text: studentUrl, width: 260, height: 260 });
-  } catch (err) {
-    fallbackEl.innerHTML = 'QR code failed to load. Share this link instead:<br><a href="' + studentUrl + '">' + studentUrl + '</a>';
-  }
+  generateQR();
+  startQRRotation();
 
-  sessionRef.child('checkins').on('value', (snap) => {
+  sessionCheckinsListener = sessionRef.child('checkins').on('value', (snap) => {
     const checkins = snap.val() || {};
-    const count = Object.keys(checkins).length;
+    const rolls = Object.keys(checkins);
+    const count = rolls.length;
+    const lateCount = rolls.filter(r => checkins[r].late).length;
+
+    rolls.forEach(r => {
+      if (!knownCheckins.has(r)) { knownCheckins.add(r); beep(); }
+    });
+
     document.getElementById('checkedInCount').textContent = count;
+    document.getElementById('lateCount').textContent = lateCount;
     document.getElementById('capWarning').classList.toggle('hidden', count < cap);
   });
 };
 
+function studentUrlFor(sessionId) {
+  return location.href.replace('teacher.html', 'student.html') + '?session=' + sessionId;
+}
+
+function generateQR() {
+  const qrEl = document.getElementById('qrCanvas');
+  const fallbackEl = document.getElementById('qrFallback');
+  qrEl.innerHTML = '';
+  fallbackEl.innerHTML = '';
+  const url = studentUrlFor(currentSessionId);
+  try {
+    if (typeof QRCode === 'undefined') throw new Error('QR library not loaded');
+    new QRCode(qrEl, { text: url, width: 240, height: 240 });
+  } catch (err) {
+    fallbackEl.innerHTML = 'QR code failed to load. Share this link instead:<br><a href="' + url + '">' + url + '</a>';
+  }
+}
+
+function startQRRotation() {
+  const ring = document.getElementById('qrRingProgress');
+  const circumference = 2 * Math.PI * 130;
+  ring.style.strokeDasharray = circumference;
+  let elapsed = 0;
+
+  if (qrRotationTimer) clearInterval(qrRotationTimer);
+  qrRotationTimer = setInterval(() => {
+    elapsed += 0.2;
+    const frac = elapsed / QR_ROTATE_SECONDS;
+    ring.style.strokeDashoffset = circumference * (1 - frac);
+    if (elapsed >= QR_ROTATE_SECONDS) {
+      elapsed = 0;
+      generateQR();
+    }
+  }, 200);
+}
+
 document.getElementById('closeBtn').onclick = async () => {
+  if (qrRotationTimer) clearInterval(qrRotationTimer);
+  if (sessionCheckinsListener) sessionRef.child('checkins').off('value', sessionCheckinsListener);
+
   await sessionRef.child('status').set('closed');
   const snap = await sessionRef.once('value');
   const data = snap.val();
-  const checkins = data.checkins || {};
+  window._sessionData = data;
+  window._sessionId = currentSessionId;
 
-  const presentRolls = new Set(Object.keys(checkins));
-  const absentees = ROSTER.filter(s => !presentRolls.has(s.roll));
-
-  document.getElementById('presentTotal').textContent = presentRolls.size;
-  document.getElementById('absentTotal').textContent = absentees.length;
-
-  const listEl = document.getElementById('absentList');
-  listEl.innerHTML = absentees.map(s => `<div class="list-row"><span>${s.name}</span><span style="color:#999">${s.roll}</span></div>`).join('') || '<div class="list-row">Everyone checked in</div>';
+  renderReview(data, 'reviewCard', 'presentTotal', 'lateTotal', 'absentTotal', 'fullList', true);
 
   document.getElementById('liveCard').classList.add('hidden');
   document.getElementById('reviewCard').classList.remove('hidden');
-
-  window._sessionData = data;
-  window._sessionId = currentSessionId;
 };
 
-document.getElementById('exportBtn').onclick = () => {
-  const data = window._sessionData;
+function renderReview(data, cardId, presentId, lateId, absentId, listId, allowOverride) {
+  const checkins = data.checkins || {};
+  const presentRolls = new Set(Object.keys(checkins));
+  const lateRolls = new Set(Object.keys(checkins).filter(r => checkins[r].late));
+  const presentCount = presentRolls.size;
+  const lateCount = lateRolls.size;
+  const absentCount = ROSTER.length - presentCount;
+
+  document.getElementById(presentId).textContent = presentCount;
+  document.getElementById(lateId).textContent = lateCount;
+  document.getElementById(absentId).textContent = absentCount;
+
+  const listEl = document.getElementById(listId);
+  listEl.innerHTML = ROSTER.map(s => {
+    const isPresent = presentRolls.has(s.roll);
+    const isLate = lateRolls.has(s.roll);
+    const badge = isPresent
+      ? (isLate ? '<span class="badge late">Late</span>' : '<span class="badge present">Present</span>')
+      : '<span class="badge absent">Absent</span>';
+    const overrideBtn = allowOverride
+      ? `<button class="override-btn" data-override="${s.roll}" data-current="${isPresent ? 'present' : 'absent'}">${isPresent ? 'Mark absent' : 'Mark present'}</button>`
+      : '';
+    return `
+      <div class="list-row">
+        <div class="name-block">
+          <span>${s.name}</span>
+          <span class="roll">${s.roll}</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          ${badge}
+          ${overrideBtn}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  if (allowOverride) {
+    listEl.querySelectorAll('[data-override]').forEach(btn => {
+      btn.onclick = async () => {
+        const roll = btn.getAttribute('data-override');
+        const current = btn.getAttribute('data-current');
+        const targetRef = db.ref('sessions/' + window._sessionId + '/checkins/' + roll);
+        if (current === 'present') {
+          await targetRef.remove();
+        } else {
+          const student = ROSTER.find(s => s.roll === roll);
+          await targetRef.set({ name: student.name, time: Date.now(), overrideByTeacher: true });
+        }
+        const freshSnap = await db.ref('sessions/' + window._sessionId).once('value');
+        window._sessionData = freshSnap.val();
+        renderReview(window._sessionData, cardId, presentId, lateId, absentId, listId, allowOverride);
+      };
+    });
+  }
+}
+
+function exportCSV(data, filenamePrefix) {
   const checkins = data.checkins || {};
   const rows = [['Roll No', 'Name', 'Status', 'Timestamp']];
   ROSTER.forEach(s => {
     const c = checkins[s.roll];
-    rows.push([s.roll, s.name, c ? 'Present' : 'Absent', c ? new Date(c.time).toLocaleString() : '']);
+    let status = 'Absent';
+    if (c) status = c.late ? 'Late' : 'Present';
+    rows.push([s.roll, s.name, status, c ? new Date(c.time).toLocaleString() : '']);
   });
   const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `attendance_${data.date}.csv`;
+  a.download = `${filenamePrefix}_${data.date}.csv`;
   a.click();
-};
+}
 
+document.getElementById('exportBtn').onclick = () => exportCSV(window._sessionData, 'attendance');
 document.getElementById('newSessionBtn').onclick = () => location.reload();
+
+// ---------- History ----------
+async function loadHistory() {
+  const listEl = document.getElementById('historyList');
+  listEl.innerHTML = '<div class="empty-state">Loading…</div>';
+  document.getElementById('historyDetailCard').classList.add('hidden');
+
+  const snap = await db.ref('sessions').once('value');
+  const sessions = snap.val() || {};
+  const ids = Object.keys(sessions).sort((a, b) => (sessions[b].createdAt || 0) - (sessions[a].createdAt || 0));
+
+  if (ids.length === 0) {
+    listEl.innerHTML = '<div class="empty-state">No sessions recorded yet.</div>';
+    return;
+  }
+
+  listEl.innerHTML = ids.map(id => {
+    const s = sessions[id];
+    const present = Object.keys(s.checkins || {}).length;
+    return `
+      <div class="session-row" data-session="${id}">
+        <div>
+          <div>${s.date}</div>
+          <div class="session-meta">${s.status === 'closed' ? 'Closed' : 'Open'}</div>
+        </div>
+        <div class="session-meta">${present}/${s.cap} present</div>
+      </div>
+    `;
+  }).join('');
+
+  listEl.querySelectorAll('[data-session]').forEach(row => {
+    row.onclick = () => showHistoryDetail(row.getAttribute('data-session'), sessions[row.getAttribute('data-session')]);
+  });
+}
+
+function showHistoryDetail(sessionId, data) {
+  document.getElementById('historyDetailCard').classList.remove('hidden');
+  document.getElementById('historyDetailTitle').textContent = 'Session — ' + data.date;
+  renderReview(data, 'historyDetailCard', 'hPresentTotal', 'hLateTotal', 'hAbsentTotal', 'historyDetailList', false);
+  document.getElementById('historyExportBtn').onclick = () => exportCSV(data, 'attendance');
+}
+
+// ---------- Dashboard ----------
+async function loadDashboard() {
+  const body = document.getElementById('dashboardBody');
+  const summary = document.getElementById('dashboardSummary');
+  body.innerHTML = '<tr><td colspan="5" class="empty-state">Loading…</td></tr>';
+
+  const snap = await db.ref('sessions').once('value');
+  const sessions = snap.val() || {};
+  const closedSessions = Object.values(sessions).filter(s => s.status === 'closed');
+
+  summary.textContent = closedSessions.length + ' closed session' + (closedSessions.length === 1 ? '' : 's') + ' recorded';
+
+  const perStudent = {};
+  ROSTER.forEach(s => perStudent[s.roll] = { name: s.name, present: 0, late: 0, total: 0 });
+
+  closedSessions.forEach(session => {
+    const checkins = session.checkins || {};
+    ROSTER.forEach(s => {
+      perStudent[s.roll].total++;
+      if (checkins[s.roll]) {
+        perStudent[s.roll].present++;
+        if (checkins[s.roll].late) perStudent[s.roll].late++;
+      }
+    });
+  });
+
+  body.innerHTML = ROSTER.map(s => {
+    const d = perStudent[s.roll];
+    const pct = d.total > 0 ? Math.round((d.present / d.total) * 100) : 0;
+    const pctClass = pct >= 75 ? 'pct-good' : pct >= 50 ? 'pct-warn' : 'pct-bad';
+    return `
+      <tr>
+        <td>${s.name}<div class="session-meta">${s.roll}</div></td>
+        <td class="center">${d.present}</td>
+        <td class="center">${d.late}</td>
+        <td class="center">${d.total}</td>
+        <td class="right ${pctClass}">${d.total > 0 ? pct + '%' : '—'}</td>
+      </tr>
+    `;
+  }).join('');
+}
 </script>
 </body>
 </html>
