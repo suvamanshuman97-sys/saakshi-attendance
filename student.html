@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mark Attendance — DTAI</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="roster.js"></script>
+<script src="firebase-config.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; background:#f5f5f2; margin:0; padding:0; color:#1a1a1a; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 20px; min-height:100vh; }
+  h1 { font-size: 19px; font-weight:600; margin-bottom:2px; }
+  .sub { color:#666; font-size:13px; margin-bottom:20px; }
+  input[type=text] { width:100%; padding:14px; font-size:16px; border:1px solid #ccc; border-radius:10px; margin-bottom:12px; }
+  .list { max-height: 55vh; overflow-y:auto; }
+  .item { padding:14px 16px; background:white; border:1px solid #e5e5e5; border-radius:10px; margin-bottom:8px; cursor:pointer; }
+  .item:active { background:#f0f0f0; }
+  .item .name { font-weight:500; font-size:15px; }
+  .item .roll { color:#999; font-size:12px; }
+  .center { text-align:center; padding: 60px 20px; }
+  .icon { font-size: 48px; margin-bottom: 16px; }
+  .msg { font-size: 18px; font-weight:600; margin-bottom:8px; }
+  .msg-sub { color:#666; font-size:14px; }
+  .hidden { display:none; }
+  .confirmBtn { width:100%; padding:14px; background:#1a1a1a; color:white; border:none; border-radius:10px; font-size:16px; font-weight:500; margin-top:12px; }
+  .cancelBtn { width:100%; padding:12px; background:white; color:#666; border:1px solid #ccc; border-radius:10px; font-size:14px; margin-top:8px; }
+  .selectedCard { background:white; border:1px solid #e5e5e5; border-radius:12px; padding:20px; text-align:center; margin-bottom:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="loadingState" class="center">
+    <div class="msg">Loading session…</div>
+  </div>
+
+  <div id="errorState" class="center hidden">
+    <div class="icon">⚠️</div>
+    <div class="msg" id="errorMsg">Session not found</div>
+    <div class="msg-sub">Ask your instructor to re-display the QR code.</div>
+  </div>
+
+  <div id="searchState" class="hidden">
+    <h1>DTAI Section A</h1>
+    <div class="sub" id="sessionDateLabel"></div>
+    <input type="text" id="searchInput" placeholder="Type your name or roll no.">
+    <div class="list" id="studentList"></div>
+  </div>
+
+  <div id="confirmState" class="hidden">
+    <h1>Confirm it's you</h1>
+    <div class="sub">Double-check before submitting</div>
+    <div class="selectedCard">
+      <div style="font-size:20px; font-weight:600;" id="confirmName"></div>
+      <div style="color:#999; font-size:14px; margin-top:4px;" id="confirmRoll"></div>
+    </div>
+    <button class="confirmBtn" id="confirmBtn">Mark me present</button>
+    <button class="cancelBtn" id="cancelBtn">Go back</button>
+  </div>
+
+  <div id="doneState" class="center hidden">
+    <div class="icon">✅</div>
+    <div class="msg">Attendance marked</div>
+    <div class="msg-sub" id="doneSub"></div>
+  </div>
+
+  <div id="capState" class="center hidden">
+    <div class="icon">🚫</div>
+    <div class="msg">Session is full</div>
+    <div class="msg-sub">The expected headcount has been reached. See your instructor.</div>
+  </div>
+
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const sessionId = params.get('session');
+const db = firebase.database();
+let sessionRef, sessionData, selectedStudent = null;
+
+function show(id) {
+  ['loadingState','errorState','searchState','confirmState','doneState','capState'].forEach(s => {
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+}
+
+async function init() {
+  if (!sessionId) { show('errorState'); return; }
+  sessionRef = db.ref('sessions/' + sessionId);
+  const snap = await sessionRef.once('value');
+  if (!snap.exists()) { show('errorState'); return; }
+  sessionData = snap.val();
+  if (sessionData.status === 'closed') {
+    document.getElementById('errorMsg').textContent = 'Session closed';
+    show('errorState');
+    return;
+  }
+  document.getElementById('sessionDateLabel').textContent = sessionData.date;
+  renderList('');
+  show('searchState');
+}
+
+function renderList(query) {
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? ROSTER.filter(s => s.name.toLowerCase().includes(q) || s.roll.toLowerCase().includes(q))
+    : ROSTER;
+  const listEl = document.getElementById('studentList');
+  listEl.innerHTML = filtered.map(s => `
+    <div class="item" data-roll="${s.roll}">
+      <div class="name">${s.name}</div>
+      <div class="roll">${s.roll}</div>
+    </div>
+  `).join('') || '<div style="text-align:center;color:#999;padding:20px;">No match</div>';
+
+  listEl.querySelectorAll('.item').forEach(el => {
+    el.onclick = () => selectStudent(el.getAttribute('data-roll'));
+  });
+}
+
+document.getElementById('searchInput').oninput = (e) => renderList(e.target.value);
+
+function selectStudent(roll) {
+  selectedStudent = ROSTER.find(s => s.roll === roll);
+  document.getElementById('confirmName').textContent = selectedStudent.name;
+  document.getElementById('confirmRoll').textContent = selectedStudent.roll;
+  show('confirmState');
+}
+
+document.getElementById('cancelBtn').onclick = () => show('searchState');
+
+document.getElementById('confirmBtn').onclick = async () => {
+  const btn = document.getElementById('confirmBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  // Re-check current state right before writing (cap + already-marked + already-closed)
+  const snap = await sessionRef.once('value');
+  const data = snap.val();
+
+  if (!data || data.status === 'closed') {
+    document.getElementById('errorMsg').textContent = 'Session closed';
+    show('errorState');
+    return;
+  }
+
+  const checkins = data.checkins || {};
+
+  if (checkins[selectedStudent.roll]) {
+    document.getElementById('doneSub').textContent = selectedStudent.name + ' was already marked present.';
+    show('doneState');
+    return;
+  }
+
+  if (Object.keys(checkins).length >= data.cap) {
+    show('capState');
+    return;
+  }
+
+  await sessionRef.child('checkins/' + selectedStudent.roll).set({
+    name: selectedStudent.name,
+    time: Date.now()
+  });
+
+  document.getElementById('doneSub').textContent = selectedStudent.name + ', you\'re marked present for ' + data.date + '.';
+  show('doneState');
+};
+
+init();
+</script>
+</body>
+</html>

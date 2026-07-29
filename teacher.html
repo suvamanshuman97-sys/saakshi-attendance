@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DTAI Attendance — Teacher</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="roster.js"></script>
+<script src="firebase-config.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; background:#f5f5f2; margin:0; padding:20px; color:#1a1a1a; }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  .sub { color: #666; font-size: 14px; margin-bottom: 24px; }
+  .card { background: white; border: 1px solid #e0e0e0; border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+  label { display:block; font-size: 13px; color:#555; margin-bottom:6px; font-weight:500; }
+  input[type=number], input[type=date], input[type=text] { width: 100%; padding: 10px 12px; font-size: 15px; border:1px solid #ccc; border-radius: 8px; margin-bottom: 16px; }
+  button { background:#1a1a1a; color:white; border:none; padding:12px 20px; border-radius:8px; font-size:15px; cursor:pointer; font-weight:500; }
+  button:hover { background:#333; }
+  button.secondary { background:white; color:#1a1a1a; border:1px solid #ccc; }
+  button:disabled { opacity:0.4; cursor:not-allowed; }
+  .row { display:flex; gap:12px; flex-wrap:wrap; }
+  #qrBox { display:flex; flex-direction:column; align-items:center; padding: 32px; }
+  #qrCanvas { margin-bottom: 16px; }
+  .stat { font-size: 42px; font-weight:700; }
+  .stat-label { color:#666; font-size:14px; }
+  .stat-row { display:flex; gap: 40px; justify-content:center; margin: 20px 0; }
+  .stat-item { text-align:center; }
+  .list { max-height: 320px; overflow-y:auto; border:1px solid #eee; border-radius:8px; }
+  .list-row { display:flex; justify-content:space-between; padding:8px 14px; border-bottom:1px solid #f0f0f0; font-size:14px; }
+  .list-row:last-child { border-bottom:none; }
+  .present { color: #2e7d32; }
+  .absent { color: #c62828; }
+  .hidden { display:none; }
+  .warn { background:#fff8e1; border:1px solid #ffe082; padding:12px 16px; border-radius:8px; font-size:13px; color:#8a6d00; margin-bottom:16px; }
+  .link-code { font-family: monospace; font-size: 20px; background:#f0f0f0; padding:8px 14px; border-radius:6px; letter-spacing:2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>DTAI Section A — Attendance</h1>
+  <div class="sub">Teacher control panel</div>
+
+  <div id="setupCard" class="card">
+    <label for="sessionDate">Session date</label>
+    <input type="date" id="sessionDate">
+    <label for="headcount">Expected headcount (count the room first)</label>
+    <input type="number" id="headcount" min="1" max="65" placeholder="e.g. 58">
+    <button id="startBtn">Start session &amp; generate QR</button>
+  </div>
+
+  <div id="liveCard" class="card hidden">
+    <div id="qrBox">
+      <div class="link-code" id="sessionCodeDisplay"></div>
+      <div style="height:16px"></div>
+      <canvas id="qrCanvas"></canvas>
+      <div style="color:#666; font-size:13px; margin-top:12px;">Scan to mark attendance</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-item">
+        <div class="stat" id="checkedInCount">0</div>
+        <div class="stat-label">Checked in</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat" id="capCount">0</div>
+        <div class="stat-label">Expected cap</div>
+      </div>
+    </div>
+    <div id="capWarning" class="warn hidden">Cap reached — no more scans will be accepted.</div>
+    <div class="row">
+      <button id="closeBtn" class="secondary">Close session &amp; review</button>
+    </div>
+  </div>
+
+  <div id="reviewCard" class="card hidden">
+    <h3>Review</h3>
+    <div class="row" style="margin-bottom:16px;">
+      <div><strong id="presentTotal">0</strong> present</div>
+      <div><strong id="absentTotal">0</strong> absent / not scanned</div>
+    </div>
+    <div style="font-weight:500; margin-bottom:8px;">Not checked in (cross-check visually):</div>
+    <div class="list" id="absentList"></div>
+    <div class="row" style="margin-top:16px;">
+      <button id="exportBtn">Export CSV</button>
+      <button id="newSessionBtn" class="secondary">Start new session</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const db = firebase.database();
+let currentSessionId = null;
+let sessionRef = null;
+
+document.getElementById('sessionDate').valueAsDate = new Date();
+
+document.getElementById('startBtn').onclick = async () => {
+  const date = document.getElementById('sessionDate').value;
+  const cap = parseInt(document.getElementById('headcount').value, 10);
+  if (!date || !cap) { alert('Enter date and headcount'); return; }
+
+  currentSessionId = date + '_' + Date.now();
+  sessionRef = db.ref('sessions/' + currentSessionId);
+  await sessionRef.set({
+    date: date,
+    cap: cap,
+    createdAt: Date.now(),
+    status: 'open',
+    checkins: {}
+  });
+
+  document.getElementById('setupCard').classList.add('hidden');
+  document.getElementById('liveCard').classList.remove('hidden');
+  document.getElementById('capCount').textContent = cap;
+  document.getElementById('sessionCodeDisplay').textContent = currentSessionId;
+
+  const studentUrl = location.href.replace('teacher.html', 'student.html') + '?session=' + currentSessionId;
+  QRCode.toCanvas(document.getElementById('qrCanvas'), studentUrl, { width: 260 });
+
+  sessionRef.child('checkins').on('value', (snap) => {
+    const checkins = snap.val() || {};
+    const count = Object.keys(checkins).length;
+    document.getElementById('checkedInCount').textContent = count;
+    document.getElementById('capWarning').classList.toggle('hidden', count < cap);
+  });
+};
+
+document.getElementById('closeBtn').onclick = async () => {
+  await sessionRef.child('status').set('closed');
+  const snap = await sessionRef.once('value');
+  const data = snap.val();
+  const checkins = data.checkins || {};
+
+  const presentRolls = new Set(Object.keys(checkins));
+  const absentees = ROSTER.filter(s => !presentRolls.has(s.roll));
+
+  document.getElementById('presentTotal').textContent = presentRolls.size;
+  document.getElementById('absentTotal').textContent = absentees.length;
+
+  const listEl = document.getElementById('absentList');
+  listEl.innerHTML = absentees.map(s => `<div class="list-row"><span>${s.name}</span><span style="color:#999">${s.roll}</span></div>`).join('') || '<div class="list-row">Everyone checked in</div>';
+
+  document.getElementById('liveCard').classList.add('hidden');
+  document.getElementById('reviewCard').classList.remove('hidden');
+
+  window._sessionData = data;
+  window._sessionId = currentSessionId;
+};
+
+document.getElementById('exportBtn').onclick = () => {
+  const data = window._sessionData;
+  const checkins = data.checkins || {};
+  const rows = [['Roll No', 'Name', 'Status', 'Timestamp']];
+  ROSTER.forEach(s => {
+    const c = checkins[s.roll];
+    rows.push([s.roll, s.name, c ? 'Present' : 'Absent', c ? new Date(c.time).toLocaleString() : '']);
+  });
+  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `attendance_${data.date}.csv`;
+  a.click();
+};
+
+document.getElementById('newSessionBtn').onclick = () => location.reload();
+</script>
+</body>
+</html>
