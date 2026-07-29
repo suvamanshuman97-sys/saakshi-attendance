@@ -34,8 +34,34 @@
     color: var(--ink);
   }
   .wrap { max-width: 880px; margin: 0 auto; }
-  h1 { font-size: 24px; font-weight: 600; margin: 0 0 2px; letter-spacing: -0.01em; }
-  .sub { color: var(--ink-soft); font-size: 14px; margin-bottom: 22px; }
+  .brand-row { display:flex; align-items:center; gap:10px; margin-bottom:2px; }
+  .node-mark { width:22px; height:22px; flex-shrink:0; }
+  .node-mark circle.hub { fill: var(--accent); }
+  .node-mark .ring { fill:none; stroke:var(--accent-soft); stroke-width:1.5; }
+  h1 { font-size: 24px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-soft); font-size: 14px; margin-bottom: 22px; margin-left: 32px; }
+
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-panel { animation: fadeSlideIn 0.25s ease; }
+
+  @keyframes rowIn {
+    from { opacity: 0; transform: translateX(-6px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes numberPop {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  .stat.bump { animation: numberPop 0.3s ease; }
+
+  @keyframes barGrow {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
 
   .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
   .tab {
@@ -98,7 +124,6 @@
   }
   .badge.present { background: var(--good-soft); color: var(--good); }
   .badge.absent { background: var(--bad-soft); color: var(--bad); }
-  .badge.late { background: #fff3d9; color: #9a6a00; }
 
   .override-btn {
     font-size: 12px; padding: 5px 12px; border-radius: 6px; font-weight: 500;
@@ -132,6 +157,18 @@
   .pct-bad { color: var(--bad); font-weight: 600; }
 
   .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-faint); font-size: 14px; }
+
+  .feed-row {
+    display: flex; align-items: center; justify-content: space-between; padding: 9px 16px;
+    border-bottom: 1px solid var(--line); font-size: 13px; animation: rowIn 0.3s ease;
+  }
+  .feed-row:last-child { border-bottom: none; }
+  .feed-row .feed-name { font-weight: 500; }
+  .feed-row .feed-time { color: var(--ink-faint); font-size: 12px; font-family: "SF Mono", Menlo, monospace; }
+  .feed-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--good); display: inline-block;
+    margin-right: 8px; flex-shrink: 0;
+  }
   .session-row {
     display: flex; align-items: center; justify-content: space-between; padding: 12px 16px;
     border-bottom: 1px solid var(--line); font-size: 14px; cursor: pointer;
@@ -143,7 +180,16 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>DTAI Section A — Attendance</h1>
+  <div class="brand-row">
+    <svg class="node-mark" viewBox="0 0 20 20">
+      <circle class="ring" cx="4" cy="16" r="2.5"/>
+      <circle class="ring" cx="16" cy="16" r="2.5"/>
+      <circle class="hub" cx="10" cy="4" r="3"/>
+      <line x1="10" y1="4" x2="4" y2="16" stroke="var(--accent-soft)" stroke-width="1.2"/>
+      <line x1="10" y1="4" x2="16" y2="16" stroke="var(--accent-soft)" stroke-width="1.2"/>
+    </svg>
+    <h1>DTAI Section A — Attendance</h1>
+  </div>
   <div class="sub">Teacher control panel</div>
 
   <div class="tabs">
@@ -153,14 +199,12 @@
   </div>
 
   <!-- LIVE TAB -->
-  <div id="tab-live">
+  <div id="tab-live" class="fade-panel">
     <div id="setupCard" class="card">
       <label for="sessionDate">Session date</label>
       <input type="date" id="sessionDate">
       <label for="headcount">Expected headcount (count the room first)</label>
       <input type="number" id="headcount" min="1" max="65" placeholder="e.g. 58">
-      <label for="lateMinutes">Mark late after (minutes from session start)</label>
-      <input type="number" id="lateMinutes" min="0" max="60" value="10">
       <button id="startBtn">Start session &amp; generate QR</button>
     </div>
 
@@ -188,13 +232,15 @@
           <div class="stat" id="capCount">0</div>
           <div class="stat-label">Expected cap</div>
         </div>
-        <div class="stat-item">
-          <div class="stat" id="lateCount" style="color:#9a6a00;">0</div>
-          <div class="stat-label">Marked late</div>
-        </div>
       </div>
       <div id="capWarning" class="warn hidden">Cap reached — no more scans will be accepted.</div>
-      <div class="row">
+
+      <div style="font-weight:500; font-size:13px; color:var(--ink-soft); margin: 20px 0 8px; letter-spacing:0.02em; text-transform:uppercase;">Live scan feed</div>
+      <div class="list" id="scanFeed" style="max-height:180px;">
+        <div class="empty-state" id="scanFeedEmpty">Waiting for the first scan…</div>
+      </div>
+
+      <div class="row" style="margin-top:16px;">
         <button id="pingToggleBtn" class="secondary">Sound: on</button>
         <button id="closeBtn" class="secondary">Close session &amp; review</button>
       </div>
@@ -204,7 +250,6 @@
       <h3 style="margin-top:0;">Review</h3>
       <div class="metric-grid">
         <div class="metric-card"><div class="num" id="presentTotal" style="color:var(--good);">0</div><div class="lbl">Present</div></div>
-        <div class="metric-card"><div class="num" id="lateTotal" style="color:#9a6a00;">0</div><div class="lbl">Late</div></div>
         <div class="metric-card"><div class="num" id="absentTotal" style="color:var(--bad);">0</div><div class="lbl">Absent</div></div>
       </div>
       <div style="font-weight:500; margin-bottom:8px; font-size:14px;">All students — tap to override</div>
@@ -217,7 +262,7 @@
   </div>
 
   <!-- HISTORY TAB -->
-  <div id="tab-history" class="hidden">
+  <div id="tab-history" class="hidden fade-panel">
     <div class="card">
       <h3 style="margin-top:0;">Past sessions</h3>
       <div id="historyList" class="list"><div class="empty-state">Loading…</div></div>
@@ -229,7 +274,6 @@
       </div>
       <div class="metric-grid">
         <div class="metric-card"><div class="num" id="hPresentTotal" style="color:var(--good);">0</div><div class="lbl">Present</div></div>
-        <div class="metric-card"><div class="num" id="hLateTotal" style="color:#9a6a00;">0</div><div class="lbl">Late</div></div>
         <div class="metric-card"><div class="num" id="hAbsentTotal" style="color:var(--bad);">0</div><div class="lbl">Absent</div></div>
       </div>
       <div class="list" id="historyDetailList"></div>
@@ -237,7 +281,7 @@
   </div>
 
   <!-- DASHBOARD TAB -->
-  <div id="tab-dashboard" class="hidden">
+  <div id="tab-dashboard" class="hidden fade-panel">
     <div class="card">
       <h3 style="margin-top:0;">Attendance dashboard</h3>
       <div class="sub" id="dashboardSummary" style="margin-bottom:16px;"></div>
@@ -246,9 +290,8 @@
           <tr>
             <th>Student</th>
             <th class="center">Present</th>
-            <th class="center">Late</th>
             <th class="center">Sessions</th>
-            <th class="right">Attendance</th>
+            <th class="right" style="width:160px;">Attendance</th>
           </tr>
         </thead>
         <tbody id="dashboardBody"></tbody>
@@ -273,7 +316,14 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     ['live','history','dashboard'].forEach(name => {
-      document.getElementById('tab-' + name).classList.toggle('hidden', name !== tab.dataset.tab);
+      const el = document.getElementById('tab-' + name);
+      const isTarget = name === tab.dataset.tab;
+      el.classList.toggle('hidden', !isTarget);
+      if (isTarget) {
+        el.classList.remove('fade-panel');
+        void el.offsetWidth;
+        el.classList.add('fade-panel');
+      }
     });
     if (tab.dataset.tab === 'history') loadHistory();
     if (tab.dataset.tab === 'dashboard') loadDashboard();
@@ -305,17 +355,14 @@ document.getElementById('sessionDate').valueAsDate = new Date();
 document.getElementById('startBtn').onclick = async () => {
   const date = document.getElementById('sessionDate').value;
   const cap = parseInt(document.getElementById('headcount').value, 10);
-  const lateMinutes = parseInt(document.getElementById('lateMinutes').value, 10) || 0;
   if (!date || !cap) { alert('Enter date and headcount'); return; }
 
   currentSessionId = date + '_' + Date.now();
   sessionRef = db.ref('sessions/' + currentSessionId);
-  const startedAt = Date.now();
   await sessionRef.set({
     date: date,
     cap: cap,
-    lateMinutes: lateMinutes,
-    createdAt: startedAt,
+    createdAt: Date.now(),
     status: 'open',
     checkins: {}
   });
@@ -333,17 +380,41 @@ document.getElementById('startBtn').onclick = async () => {
     const checkins = snap.val() || {};
     const rolls = Object.keys(checkins);
     const count = rolls.length;
-    const lateCount = rolls.filter(r => checkins[r].late).length;
+    let hasNew = false;
 
     rolls.forEach(r => {
-      if (!knownCheckins.has(r)) { knownCheckins.add(r); beep(); }
+      if (!knownCheckins.has(r)) { knownCheckins.add(r); beep(); hasNew = true; }
     });
 
-    document.getElementById('checkedInCount').textContent = count;
-    document.getElementById('lateCount').textContent = lateCount;
+    const countEl = document.getElementById('checkedInCount');
+    countEl.textContent = count;
+    if (hasNew) {
+      countEl.classList.remove('bump');
+      void countEl.offsetWidth;
+      countEl.classList.add('bump');
+    }
     document.getElementById('capWarning').classList.toggle('hidden', count < cap);
+
+    renderScanFeed(checkins);
   });
 };
+
+function renderScanFeed(checkins) {
+  const feedEl = document.getElementById('scanFeed');
+  const entries = Object.entries(checkins).sort((a, b) => (b[1].time || 0) - (a[1].time || 0));
+
+  if (entries.length === 0) {
+    feedEl.innerHTML = '<div class="empty-state" id="scanFeedEmpty">Waiting for the first scan…</div>';
+    return;
+  }
+
+  feedEl.innerHTML = entries.map(([roll, c]) => `
+    <div class="feed-row">
+      <div><span class="feed-dot"></span><span class="feed-name">${c.name}</span></div>
+      <div class="feed-time">${new Date(c.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'})}</div>
+    </div>
+  `).join('');
+}
 
 function studentUrlFor(sessionId) {
   return location.href.replace('teacher.html', 'student.html') + '?session=' + sessionId;
@@ -391,30 +462,26 @@ document.getElementById('closeBtn').onclick = async () => {
   window._sessionData = data;
   window._sessionId = currentSessionId;
 
-  renderReview(data, 'reviewCard', 'presentTotal', 'lateTotal', 'absentTotal', 'fullList', true);
+  renderReview(data, 'reviewCard', 'presentTotal', 'absentTotal', 'fullList', true);
 
   document.getElementById('liveCard').classList.add('hidden');
   document.getElementById('reviewCard').classList.remove('hidden');
 };
 
-function renderReview(data, cardId, presentId, lateId, absentId, listId, allowOverride) {
+function renderReview(data, cardId, presentId, absentId, listId, allowOverride) {
   const checkins = data.checkins || {};
   const presentRolls = new Set(Object.keys(checkins));
-  const lateRolls = new Set(Object.keys(checkins).filter(r => checkins[r].late));
   const presentCount = presentRolls.size;
-  const lateCount = lateRolls.size;
   const absentCount = ROSTER.length - presentCount;
 
   document.getElementById(presentId).textContent = presentCount;
-  document.getElementById(lateId).textContent = lateCount;
   document.getElementById(absentId).textContent = absentCount;
 
   const listEl = document.getElementById(listId);
   listEl.innerHTML = ROSTER.map(s => {
     const isPresent = presentRolls.has(s.roll);
-    const isLate = lateRolls.has(s.roll);
     const badge = isPresent
-      ? (isLate ? '<span class="badge late">Late</span>' : '<span class="badge present">Present</span>')
+      ? '<span class="badge present">Present</span>'
       : '<span class="badge absent">Absent</span>';
     const overrideBtn = allowOverride
       ? `<button class="override-btn" data-override="${s.roll}" data-current="${isPresent ? 'present' : 'absent'}">${isPresent ? 'Mark absent' : 'Mark present'}</button>`
@@ -447,7 +514,7 @@ function renderReview(data, cardId, presentId, lateId, absentId, listId, allowOv
         }
         const freshSnap = await db.ref('sessions/' + window._sessionId).once('value');
         window._sessionData = freshSnap.val();
-        renderReview(window._sessionData, cardId, presentId, lateId, absentId, listId, allowOverride);
+        renderReview(window._sessionData, cardId, presentId, absentId, listId, allowOverride);
       };
     });
   }
@@ -458,8 +525,7 @@ function exportCSV(data, filenamePrefix) {
   const rows = [['Roll No', 'Name', 'Status', 'Timestamp']];
   ROSTER.forEach(s => {
     const c = checkins[s.roll];
-    let status = 'Absent';
-    if (c) status = c.late ? 'Late' : 'Present';
+    const status = c ? 'Present' : 'Absent';
     rows.push([s.roll, s.name, status, c ? new Date(c.time).toLocaleString() : '']);
   });
   const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
@@ -510,7 +576,7 @@ async function loadHistory() {
 function showHistoryDetail(sessionId, data) {
   document.getElementById('historyDetailCard').classList.remove('hidden');
   document.getElementById('historyDetailTitle').textContent = 'Session — ' + data.date;
-  renderReview(data, 'historyDetailCard', 'hPresentTotal', 'hLateTotal', 'hAbsentTotal', 'historyDetailList', false);
+  renderReview(data, 'historyDetailCard', 'hPresentTotal', 'hAbsentTotal', 'historyDetailList', false);
   document.getElementById('historyExportBtn').onclick = () => exportCSV(data, 'attendance');
 }
 
@@ -527,7 +593,7 @@ async function loadDashboard() {
   summary.textContent = closedSessions.length + ' closed session' + (closedSessions.length === 1 ? '' : 's') + ' recorded';
 
   const perStudent = {};
-  ROSTER.forEach(s => perStudent[s.roll] = { name: s.name, present: 0, late: 0, total: 0 });
+  ROSTER.forEach(s => perStudent[s.roll] = { name: s.name, present: 0, total: 0 });
 
   closedSessions.forEach(session => {
     const checkins = session.checkins || {};
@@ -535,22 +601,28 @@ async function loadDashboard() {
       perStudent[s.roll].total++;
       if (checkins[s.roll]) {
         perStudent[s.roll].present++;
-        if (checkins[s.roll].late) perStudent[s.roll].late++;
       }
     });
   });
 
-  body.innerHTML = ROSTER.map(s => {
+  body.innerHTML = ROSTER.map((s, i) => {
     const d = perStudent[s.roll];
     const pct = d.total > 0 ? Math.round((d.present / d.total) * 100) : 0;
+    const barColor = pct >= 75 ? 'var(--good)' : pct >= 50 ? '#c98a1f' : 'var(--bad)';
     const pctClass = pct >= 75 ? 'pct-good' : pct >= 50 ? 'pct-warn' : 'pct-bad';
     return `
       <tr>
         <td>${s.name}<div class="session-meta">${s.roll}</div></td>
         <td class="center">${d.present}</td>
-        <td class="center">${d.late}</td>
         <td class="center">${d.total}</td>
-        <td class="right ${pctClass}">${d.total > 0 ? pct + '%' : '—'}</td>
+        <td class="right">
+          <div style="display:flex; align-items:center; gap:10px; justify-content:flex-end;">
+            <div style="flex:1; max-width:80px; height:6px; background:var(--line); border-radius:3px; overflow:hidden;">
+              <div style="height:100%; width:${pct}%; background:${barColor}; border-radius:3px; transform-origin:left; animation: barGrow 0.5s ease ${Math.min(i,20)*0.02}s backwards;"></div>
+            </div>
+            <span class="${pctClass}" style="min-width:38px; text-align:right;">${d.total > 0 ? pct + '%' : '—'}</span>
+          </div>
+        </td>
       </tr>
     `;
   }).join('');
