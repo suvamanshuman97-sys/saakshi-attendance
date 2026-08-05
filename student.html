@@ -67,6 +67,7 @@
   }
 
   .center { text-align:center; padding: 60px 20px; }
+  .empty-search-state { text-align:center; color:var(--ink-faint); padding:24px 20px; font-size:13.5px; }
   .msg { font-size: 17px; font-weight:700; margin-bottom:6px; letter-spacing: -0.01em; }
   .msg-sub { color:var(--ink-soft); font-size:13.5px; }
   .hidden { display:none; }
@@ -103,6 +104,19 @@
     width: 48px; height: 48px; border-radius: 50%; background: var(--accent-soft);
     display:flex; align-items:center; justify-content:center; margin: 0 auto 14px;
     font-size: 18px; font-weight: 700; color: var(--accent);
+  }
+
+  .session-info-box {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 4px;
+  }
+  .session-info-label {
+    font-size: 10.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.05em;
+    font-weight: 600; margin-bottom: 8px; text-align: center;
+  }
+  .session-info-row {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 13px; color: var(--ink-soft); font-weight: 500;
   }
 
   .check-wrap { width: 80px; height: 80px; margin: 0 auto 20px; }
@@ -174,6 +188,9 @@
         <line x1="10" y1="4" x2="16" y2="16" stroke="#e0bd9e" stroke-width="1.2"/>
       </svg>
       <h1 id="sectionLabel">DTAI</h1>
+      <svg style="width:14px;height:14px;margin-left:auto;flex-shrink:0;opacity:0.5;" viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" stroke-width="2">
+        <path d="M12 2 L20 6 V11 C20 16 16.5 20.5 12 22 C7.5 20.5 4 16 4 11 V6 Z"/>
+      </svg>
     </div>
     <div class="sub" id="sessionDateLabel"></div>
     <input type="text" id="searchInput" placeholder="Type your name or roll no.">
@@ -186,11 +203,18 @@
     <div class="sub" style="margin-left:0; margin-bottom:20px;">Double-check before submitting</div>
     <div class="selectedCard">
       <div class="id-chip" id="confirmInitial"></div>
-      <div style="font-size:20px; font-weight:600;" id="confirmName"></div>
-      <div style="color:#999; font-size:14px; margin-top:4px;" id="confirmRoll"></div>
+      <div style="font-size:20px; font-weight:700; letter-spacing:-0.01em;" id="confirmName"></div>
+      <div style="color:var(--ink-faint); font-size:13px; margin-top:4px;" id="confirmRoll"></div>
     </div>
-    <button class="confirmBtn" id="confirmBtn">Mark me present</button>
-    <button class="cancelBtn" id="cancelBtn">Go back</button>
+    <div class="session-info-box">
+      <div class="session-info-label">You are marking attendance for</div>
+      <div class="session-info-row">
+        <span id="confirmDate"></span>
+        <span id="confirmSectionName"></span>
+      </div>
+    </div>
+    <button class="confirmBtn" id="confirmBtn">Confirm attendance</button>
+    <button class="cancelBtn" id="cancelBtn">Cancel</button>
   </div>
 
   <div id="doneState" class="center hidden fade-panel">
@@ -305,7 +329,7 @@ function renderList(query) {
       <div class="name">${s.name}</div>
       <div class="roll">${s.roll}</div>
     </div>
-  `).join('') || '<div style="text-align:center;color:#999;padding:20px;">No match</div>';
+  `).join('') || '<div class="empty-search-state">No match</div>';
 
   listEl.querySelectorAll('.item').forEach(el => {
     el.onclick = () => selectStudent(el.getAttribute('data-roll'));
@@ -319,6 +343,8 @@ function selectStudent(roll) {
   document.getElementById('confirmName').textContent = selectedStudent.name;
   document.getElementById('confirmRoll').textContent = selectedStudent.roll;
   document.getElementById('confirmInitial').textContent = initials(selectedStudent.name);
+  document.getElementById('confirmDate').textContent = sessionData.date;
+  document.getElementById('confirmSectionName').textContent = SECTIONS[sectionKey].label;
   show('confirmState');
 }
 

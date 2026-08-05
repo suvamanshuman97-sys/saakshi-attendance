@@ -7,127 +7,129 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="roster.js"></script>
 <script src="firebase-config.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
   :root {
-    --ink: #0f0f10;
-    --ink-soft: #6b6b6f;
-    --ink-faint: #a3a3a8;
-    --paper: #fafafa;
-    --card: #ffffff;
-    --line: #eaeaea;
-    --line-strong: #dcdcdc;
-    --accent: #d4562a;
-    --accent-soft: #fdeee6;
-    --good: #16803c;
-    --good-soft: #ecfaf0;
-    --bad: #c0362c;
-    --bad-soft: #fdeeed;
-    --radius-sm: 8px;
-    --radius: 12px;
-    --radius-lg: 20px;
-    --shadow-sm: 0 1px 2px rgba(15,15,16,0.04), 0 1px 1px rgba(15,15,16,0.03);
-    --shadow-md: 0 4px 12px rgba(15,15,16,0.06), 0 1px 3px rgba(15,15,16,0.04);
-    --shadow-lg: 0 12px 32px rgba(15,15,16,0.08), 0 2px 8px rgba(15,15,16,0.04);
+    --ink: #0f0f10; --ink-soft: #6b6b6f; --ink-faint: #a3a3a8;
+    --paper: #f7f7f8; --card: #ffffff; --sidebar: #ffffff;
+    --line: #eaeaea; --line-strong: #dcdcdc;
+    --accent: #d4562a; --accent-soft: #fdeee6;
+    --good: #16803c; --good-soft: #ecfaf0;
+    --bad: #c0362c; --bad-soft: #fdeeed;
+    --warn: #b8790f; --warn-soft: #fcf3e2;
+    --radius-sm: 8px; --radius: 12px; --radius-lg: 18px;
+    --shadow-sm: 0 1px 2px rgba(15,15,16,0.05);
+    --shadow-md: 0 4px 14px rgba(15,15,16,0.07);
+    --shadow-lg: 0 16px 40px rgba(15,15,16,0.10);
   }
   [data-theme="dark"] {
-    --ink: #f4f4f5;
-    --ink-soft: #9a9aa0;
-    --ink-faint: #6b6b70;
-    --paper: #0a0a0b;
-    --card: #151517;
-    --line: #232326;
-    --line-strong: #2e2e32;
-    --accent: #ff8452;
-    --accent-soft: #2c1a12;
-    --good: #4ade80;
-    --good-soft: #0f2818;
-    --bad: #f87171;
-    --bad-soft: #2c1414;
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-    --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
-    --shadow-lg: 0 16px 40px rgba(0,0,0,0.5);
+    --ink: #f4f4f5; --ink-soft: #9a9aa0; --ink-faint: #6b6b70;
+    --paper: #08080a; --card: #131316; --sidebar: #101012;
+    --line: #222225; --line-strong: #2d2d31;
+    --accent: #ff8452; --accent-soft: #2c1a12;
+    --good: #4ade80; --good-soft: #0f2818;
+    --bad: #f87171; --bad-soft: #2c1414;
+    --warn: #fbbf24; --warn-soft: #2b2211;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-md: 0 4px 18px rgba(0,0,0,0.45);
+    --shadow-lg: 0 20px 50px rgba(0,0,0,0.55);
   }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
     font-family: 'Inter', -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: var(--paper);
-    margin: 0;
-    padding: 40px 24px 80px;
-    color: var(--ink);
-    transition: background 0.3s ease, color 0.3s ease;
+    background: var(--paper); margin: 0; color: var(--ink);
     -webkit-font-smoothing: antialiased;
-    font-feature-settings: 'ss01' 1, 'ss02' 1;
+    transition: background 0.3s ease, color 0.3s ease;
   }
-  .wrap { max-width: 860px; margin: 0 auto; }
+  a { color: inherit; }
 
-  .top-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
-  .brand-row { display:flex; align-items:center; gap:10px; }
+  .app { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 232px; flex-shrink: 0; background: var(--sidebar); border-right: 1px solid var(--line);
+    padding: 22px 14px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh;
+  }
+  .brand-row { display:flex; align-items:center; gap:9px; padding: 4px 8px 22px; }
   .node-mark { width:20px; height:20px; flex-shrink:0; }
   .node-mark circle.hub { fill: var(--accent); }
   .node-mark .ring { fill:none; stroke:var(--accent-soft); stroke-width:1.5; }
-  h1 { font-size: 21px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
-  .sub { color: var(--ink-soft); font-size: 13.5px; margin-bottom: 28px; margin-left: 30px; font-weight: 450; }
+  .brand-name { font-size: 15.5px; font-weight: 800; letter-spacing: -0.02em; }
 
-  .theme-toggle {
-    display: flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 8px;
-    background: var(--card); border: 1px solid var(--line); cursor: pointer; font-size: 12.5px;
-    color: var(--ink-soft); font-weight: 500; transition: all 0.15s; box-shadow: var(--shadow-sm);
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--radius-sm);
+    font-size: 13.5px; font-weight: 600; color: var(--ink-soft); cursor: pointer; margin-bottom: 2px;
+    transition: background 0.15s, color 0.15s;
   }
-  .theme-toggle:hover { border-color: var(--line-strong); color: var(--ink); box-shadow: var(--shadow-md); }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.8; }
+  .nav-item:hover { background: var(--paper); color: var(--ink); }
+  .nav-item.active { background: var(--accent-soft); color: var(--accent); }
+  .nav-item.active svg { opacity: 1; }
 
-  .section-picker { display: flex; gap: 6px; margin-bottom: 24px; margin-left: 30px; }
+  .sidebar-section-label {
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--ink-faint); padding: 16px 12px 6px;
+  }
+  .section-picker-sb { display: flex; flex-direction: column; gap: 3px; }
   .section-chip {
-    padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
-    border: 1px solid var(--line); color: var(--ink-soft); background: var(--card);
-    transition: all 0.15s;
+    padding: 8px 12px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer;
+    color: var(--ink-soft); transition: all 0.15s; display: flex; align-items: center; justify-content: space-between;
   }
-  .section-chip.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-  .section-chip:hover:not(.active) { border-color: var(--line-strong); color: var(--ink); background: var(--paper); }
+  .section-chip.active { background: var(--ink); color: var(--paper); }
+  .section-chip:hover:not(.active) { background: var(--paper); color: var(--ink); }
+
+  .sidebar-footer { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); }
+  .theme-toggle {
+    display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-radius: var(--radius-sm);
+    cursor: pointer; font-size: 13px; color: var(--ink-soft); font-weight: 600; transition: all 0.15s;
+  }
+  .theme-toggle:hover { background: var(--paper); color: var(--ink); }
+
+  .main { flex: 1; padding: 32px 40px 80px; max-width: 1040px; }
+  .page-header { margin-bottom: 24px; }
+  .page-title { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 3px; }
+  .page-sub { color: var(--ink-soft); font-size: 13.5px; font-weight: 450; }
+
+  .page { display: none; }
+  .page.active { display: block; }
 
   @keyframes fadeSlideIn {
-    from { opacity: 0; transform: translateY(4px); }
+    from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  .fade-panel { animation: fadeSlideIn 0.2s ease; }
+  .fade-panel { animation: fadeSlideIn 0.22s ease; }
 
   @keyframes rowIn {
     from { opacity: 0; transform: translateX(-4px); }
     to { opacity: 1; transform: translateX(0); }
   }
   @keyframes numberPop {
-    0% { transform: scale(1); }
-    30% { transform: scale(1.12); }
-    100% { transform: scale(1); }
+    0% { transform: scale(1); } 30% { transform: scale(1.12); } 100% { transform: scale(1); }
   }
   .stat.bump { animation: numberPop 0.3s ease; }
-
-  @keyframes barGrow {
-    from { transform: scaleX(0); }
-    to { transform: scaleX(1); }
+  @keyframes barGrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @keyframes dotPulse {
+    0% { box-shadow: 0 0 0 0 rgba(212,86,42,0.5); }
+    70% { box-shadow: 0 0 0 8px rgba(212,86,42,0); }
+    100% { box-shadow: 0 0 0 0 rgba(212,86,42,0); }
   }
-  .tabs { display: flex; gap: 2px; margin-bottom: 24px; border-bottom: 1px solid var(--line); }
-  .tab {
-    padding: 9px 16px; font-size: 13.5px; font-weight: 600; color: var(--ink-faint);
-    cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
-    transition: color 0.15s, border-color 0.15s;
-  }
-  .tab.active { color: var(--ink); border-color: var(--accent); }
-  .tab:hover:not(.active) { color: var(--ink-soft); }
 
   .card {
     background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
-    padding: 26px; margin-bottom: 14px; box-shadow: var(--shadow-sm);
-    transition: background 0.3s ease, border-color 0.3s ease;
+    padding: 24px; margin-bottom: 14px; box-shadow: var(--shadow-sm);
   }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 900px) { .grid-2, .grid-4 { grid-template-columns: 1fr 1fr; } }
 
   label { display: block; font-size: 12.5px; color: var(--ink-soft); margin-bottom: 6px; font-weight: 500; }
   input[type=number], input[type=date], input[type=text] {
     width: 100%; padding: 10px 13px; font-size: 14.5px; border: 1px solid var(--line);
     border-radius: var(--radius-sm); margin-bottom: 18px; background: var(--card); color: var(--ink);
-    font-family: inherit; transition: border-color 0.15s, box-shadow 0.15s; box-shadow: var(--shadow-sm);
+    font-family: inherit; transition: border-color 0.15s, box-shadow 0.15s;
   }
   input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 
@@ -135,9 +137,8 @@
     background: var(--ink); color: var(--paper); border: none; padding: 11px 20px;
     border-radius: var(--radius-sm); font-size: 13.5px; cursor: pointer; font-weight: 600;
     transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s; font-family: inherit;
-    box-shadow: var(--shadow-sm);
   }
-  button:hover { opacity: 0.88; box-shadow: var(--shadow-md); }
+  button:hover { opacity: 0.88; }
   button:active { transform: scale(0.98); }
   button.secondary { background: var(--card); color: var(--ink); border: 1px solid var(--line); }
   button.secondary:hover { border-color: var(--line-strong); }
@@ -148,29 +149,17 @@
   #qrBox { display: flex; flex-direction: column; align-items: center; padding: 8px; }
   #qrCanvas { padding: 16px; background: white; border-radius: var(--radius); box-shadow: var(--shadow-md); position: relative; line-height: 0; }
   #qrCanvas img { display: block; }
-  .qr-ring-wrap {
-    position: relative; width: 288px; height: 288px; margin: 0 auto;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .qr-progress {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none;
-  }
+  .qr-ring-wrap { position: relative; width: 260px; height: 260px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+  .qr-progress { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
   .qr-pulse-dot {
-    position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; border-radius: 50%;
-    background: var(--accent); box-shadow: 0 0 0 0 rgba(212,86,42,0.5);
-    animation: dotPulse 2s ease infinite;
-  }
-  @keyframes dotPulse {
-    0% { box-shadow: 0 0 0 0 rgba(212,86,42,0.5); }
-    70% { box-shadow: 0 0 0 8px rgba(212,86,42,0); }
-    100% { box-shadow: 0 0 0 0 rgba(212,86,42,0); }
+    position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent); animation: dotPulse 2s ease infinite;
   }
 
-  .stat-row { display: flex; gap: 32px; justify-content: center; margin: 24px 0 18px; }
+  .stat-row { display: flex; gap: 28px; justify-content: center; margin: 22px 0 16px; }
   .stat-item { text-align: center; }
-  .stat { font-size: 38px; font-weight: 800; line-height: 1; letter-spacing: -0.03em; }
-  .stat-label { color: var(--ink-soft); font-size: 11px; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+  .stat { font-size: 34px; font-weight: 800; line-height: 1; letter-spacing: -0.03em; }
+  .stat-label { color: var(--ink-soft); font-size: 10.5px; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
 
   .list { max-height: 340px; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
   .list-row {
@@ -209,13 +198,17 @@
   .metric-card .num { font-size: 25px; font-weight: 800; letter-spacing: -0.02em; }
   .metric-card .lbl { font-size: 11px; color: var(--ink-soft); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
 
+  .kpi-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow-sm); }
+  .kpi-label { font-size: 11.5px; color: var(--ink-soft); font-weight: 600; margin-bottom: 8px; }
+  .kpi-value { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+
   table { width: 100%; border-collapse: collapse; }
   th { text-align: left; font-size: 10.5px; color: var(--ink-soft); font-weight: 600; padding: 10px 14px; background: var(--paper); text-transform: uppercase; letter-spacing: 0.05em; }
   th.right, td.right { text-align: right; }
   th.center, td.center { text-align: center; }
   td { padding: 11px 14px; font-size: 13.5px; border-top: 1px solid var(--line); }
   .pct-good { color: var(--good); font-weight: 700; }
-  .pct-warn { color: #d69420; font-weight: 700; }
+  .pct-warn { color: var(--warn); font-weight: 700; }
   .pct-bad { color: var(--bad); font-weight: 700; }
 
   .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-faint); font-size: 13.5px; }
@@ -238,145 +231,230 @@
   .session-row:hover { background: var(--paper); }
   .session-row:last-child { border-bottom: none; }
   .session-meta { color: var(--ink-soft); font-size: 12px; }
+
+  .card-title { font-size: 14px; font-weight: 700; margin: 0 0 16px; letter-spacing: -0.01em; }
+  .chart-wrap { position: relative; height: 220px; }
+
+  .risk-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .risk-row:last-child { border-bottom: none; }
+  .risk-rank { width: 20px; font-size: 12px; color: var(--ink-faint); font-weight: 700; }
+  .risk-name { flex: 1; font-size: 13px; font-weight: 600; }
+  .risk-roll { color: var(--ink-faint); font-size: 11px; font-weight: 500; }
+  .risk-bar-wrap { width: 90px; height: 5px; background: var(--line); border-radius: 3px; overflow: hidden; }
+  .risk-bar { height: 100%; border-radius: 3px; }
+  .risk-pct { width: 40px; text-align: right; font-size: 12.5px; font-weight: 700; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top-row">
-    <div>
-      <div class="brand-row">
-        <svg class="node-mark" viewBox="0 0 20 20">
-          <circle class="ring" cx="4" cy="16" r="2.5"/>
-          <circle class="ring" cx="16" cy="16" r="2.5"/>
-          <circle class="hub" cx="10" cy="4" r="3"/>
-          <line x1="10" y1="4" x2="4" y2="16" stroke="var(--accent-soft)" stroke-width="1.2"/>
-          <line x1="10" y1="4" x2="16" y2="16" stroke="var(--accent-soft)" stroke-width="1.2"/>
-        </svg>
-        <h1>DTAI Attendance</h1>
+<div class="app">
+
+  <div class="sidebar">
+    <div class="brand-row">
+      <svg class="node-mark" viewBox="0 0 20 20">
+        <circle class="ring" cx="4" cy="16" r="2.5"/>
+        <circle class="ring" cx="16" cy="16" r="2.5"/>
+        <circle class="hub" cx="10" cy="4" r="3"/>
+        <line x1="10" y1="4" x2="4" y2="16" stroke="var(--accent-soft)" stroke-width="1.2"/>
+        <line x1="10" y1="4" x2="16" y2="16" stroke="var(--accent-soft)" stroke-width="1.2"/>
+      </svg>
+      <div class="brand-name">DTAI</div>
+    </div>
+
+    <div class="nav-item active" data-page="live">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" data-page="sessions">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+      Sessions
+    </div>
+    <div class="nav-item" data-page="students">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Students
+    </div>
+    <div class="nav-item" data-page="analytics">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Analytics
+    </div>
+
+    <div class="sidebar-section-label">Section</div>
+    <div class="section-picker-sb" id="sectionPicker"></div>
+
+    <div class="sidebar-footer">
+      <div class="theme-toggle" id="themeToggle">
+        <span id="themeIcon">☾</span>
+        <span id="themeLabel">Dark mode</span>
       </div>
     </div>
-    <div class="theme-toggle" id="themeToggle">
-      <span id="themeIcon">☾</span>
-      <span id="themeLabel">Dark mode</span>
-    </div>
-  </div>
-  <div class="sub">Teacher control panel</div>
-
-  <div class="section-picker" id="sectionPicker"></div>
-
-  <div class="tabs">
-    <div class="tab active" data-tab="live">Live session</div>
-    <div class="tab" data-tab="history">History</div>
-    <div class="tab" data-tab="dashboard">Dashboard</div>
   </div>
 
-  <!-- LIVE TAB -->
-  <div id="tab-live" class="fade-panel">
-    <div id="setupCard" class="card">
-      <label for="sessionDate">Session date</label>
-      <input type="date" id="sessionDate">
-      <label for="headcount">Expected headcount (count the room first)</label>
-      <input type="number" id="headcount" min="1" max="200" placeholder="e.g. 58">
-      <button id="startBtn">Start session &amp; generate QR</button>
-    </div>
+  <div class="main">
 
-    <div id="liveCard" class="card hidden">
-      <div id="qrBox">
-        <div class="link-code" id="sessionCodeDisplay"></div>
-        <div style="height:18px"></div>
-        <div class="qr-ring-wrap">
-          <svg class="qr-progress" viewBox="0 0 288 288">
-            <circle cx="144" cy="144" r="140" fill="none" stroke="var(--line)" stroke-width="2.5"/>
-            <circle id="qrRingProgress" cx="144" cy="144" r="140" fill="none" stroke="var(--accent)" stroke-width="2.5"
-              stroke-linecap="round" transform="rotate(-90 144 144)"/>
-          </svg>
-          <div id="qrCanvas"></div>
-          <div class="qr-pulse-dot"></div>
+    <div id="page-live" class="page active">
+      <div class="page-header">
+        <div class="page-title">Live session</div>
+        <div class="page-sub">Start a session and project the QR for students to scan.</div>
+      </div>
+
+      <div id="setupCard" class="card fade-panel">
+        <label for="sessionDate">Session date</label>
+        <input type="date" id="sessionDate">
+        <label for="headcount">Expected headcount (count the room first)</label>
+        <input type="number" id="headcount" min="1" max="200" placeholder="e.g. 58">
+        <button id="startBtn">Start session &amp; generate QR</button>
+      </div>
+
+      <div id="liveCard" class="card hidden fade-panel">
+        <div id="qrBox">
+          <div class="link-code" id="sessionCodeDisplay"></div>
+          <div style="height:16px"></div>
+          <div class="qr-ring-wrap">
+            <svg class="qr-progress" viewBox="0 0 260 260">
+              <circle cx="130" cy="130" r="126" fill="none" stroke="var(--line)" stroke-width="2.5"/>
+              <circle id="qrRingProgress" cx="130" cy="130" r="126" fill="none" stroke="var(--accent)" stroke-width="2.5"
+                stroke-linecap="round" transform="rotate(-90 130 130)"/>
+            </svg>
+            <div id="qrCanvas"></div>
+            <div class="qr-pulse-dot"></div>
+          </div>
+          <div style="color:var(--ink-soft); font-size:12.5px; margin-top:14px;">Scan to mark attendance · code refreshes automatically</div>
+          <div id="qrFallback" style="margin-top:10px; font-size:12px; color:var(--ink-faint); word-break:break-all; text-align:center;"></div>
         </div>
-        <div style="color:var(--ink-soft); font-size:13px; margin-top:14px;">Scan to mark attendance · code refreshes automatically</div>
-        <div id="qrFallback" style="margin-top:10px; font-size:12px; color:var(--ink-faint); word-break:break-all; text-align:center;"></div>
-      </div>
-      <div class="stat-row">
-        <div class="stat-item">
-          <div class="stat" id="checkedInCount" style="color:var(--good);">0</div>
-          <div class="stat-label">Checked in</div>
+        <div class="stat-row">
+          <div class="stat-item">
+            <div class="stat" id="checkedInCount" style="color:var(--good);">0</div>
+            <div class="stat-label">Checked in</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat" id="capCount">0</div>
+            <div class="stat-label">Expected cap</div>
+          </div>
         </div>
-        <div class="stat-item">
-          <div class="stat" id="capCount">0</div>
-          <div class="stat-label">Expected cap</div>
+        <div id="capWarning" class="warn hidden">Cap reached — no more scans will be accepted.</div>
+
+        <div style="font-weight:600; font-size:11px; color:var(--ink-soft); margin: 18px 0 8px; letter-spacing:0.05em; text-transform:uppercase;">Live scan feed</div>
+        <div class="list" id="scanFeed" style="max-height:180px;">
+          <div class="empty-state" id="scanFeedEmpty">Waiting for the first scan…</div>
+        </div>
+
+        <div class="row" style="margin-top:16px;">
+          <button id="pingToggleBtn" class="secondary">Sound: on</button>
+          <button id="closeBtn" class="secondary">Close session &amp; review</button>
         </div>
       </div>
-      <div id="capWarning" class="warn hidden">Cap reached — no more scans will be accepted.</div>
 
-      <div style="font-weight:600; font-size:12px; color:var(--ink-soft); margin: 20px 0 8px; letter-spacing:0.04em; text-transform:uppercase;">Live scan feed</div>
-      <div class="list" id="scanFeed" style="max-height:180px;">
-        <div class="empty-state" id="scanFeedEmpty">Waiting for the first scan…</div>
-      </div>
-
-      <div class="row" style="margin-top:16px;">
-        <button id="pingToggleBtn" class="secondary">Sound: on</button>
-        <button id="closeBtn" class="secondary">Close session &amp; review</button>
+      <div id="reviewCard" class="card hidden fade-panel">
+        <div class="card-title">Review</div>
+        <div class="metric-grid">
+          <div class="metric-card"><div class="num" id="presentTotal" style="color:var(--good);">0</div><div class="lbl">Present</div></div>
+          <div class="metric-card"><div class="num" id="absentTotal" style="color:var(--bad);">0</div><div class="lbl">Absent</div></div>
+        </div>
+        <div style="font-weight:600; margin-bottom:8px; font-size:13.5px;">All students — tap to override</div>
+        <div class="list" id="fullList"></div>
+        <div class="row" style="margin-top:18px;">
+          <button id="exportBtn" class="accent">Export CSV</button>
+          <button id="newSessionBtn" class="secondary">Start new session</button>
+        </div>
       </div>
     </div>
 
-    <div id="reviewCard" class="card hidden">
-      <h3 style="margin-top:0;">Review</h3>
-      <div class="metric-grid">
-        <div class="metric-card"><div class="num" id="presentTotal" style="color:var(--good);">0</div><div class="lbl">Present</div></div>
-        <div class="metric-card"><div class="num" id="absentTotal" style="color:var(--bad);">0</div><div class="lbl">Absent</div></div>
+    <div id="page-sessions" class="page">
+      <div class="page-header">
+        <div class="page-title">Sessions</div>
+        <div class="page-sub">All attendance sessions for this section.</div>
       </div>
-      <div style="font-weight:600; margin-bottom:8px; font-size:14px;">All students — tap to override</div>
-      <div class="list" id="fullList"></div>
-      <div class="row" style="margin-top:18px;">
-        <button id="exportBtn" class="accent">Export CSV</button>
-        <button id="newSessionBtn" class="secondary">Start new session</button>
+      <div class="card fade-panel">
+        <div id="historyList" class="list"><div class="empty-state">Loading…</div></div>
+      </div>
+      <div id="historyDetailCard" class="card hidden fade-panel">
+        <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <div class="card-title" style="margin:0;" id="historyDetailTitle">Session</div>
+          <button class="secondary" id="historyExportBtn">Export CSV</button>
+        </div>
+        <div class="metric-grid">
+          <div class="metric-card"><div class="num" id="hPresentTotal" style="color:var(--good);">0</div><div class="lbl">Present</div></div>
+          <div class="metric-card"><div class="num" id="hAbsentTotal" style="color:var(--bad);">0</div><div class="lbl">Absent</div></div>
+        </div>
+        <div class="list" id="historyDetailList"></div>
       </div>
     </div>
-  </div>
 
-  <!-- HISTORY TAB -->
-  <div id="tab-history" class="hidden fade-panel">
-    <div class="card">
-      <h3 style="margin-top:0;">Past sessions</h3>
-      <div id="historyList" class="list"><div class="empty-state">Loading…</div></div>
-    </div>
-    <div id="historyDetailCard" class="card hidden">
-      <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:14px;">
-        <h3 style="margin:0;" id="historyDetailTitle">Session</h3>
-        <button class="secondary" id="historyExportBtn">Export CSV</button>
+    <div id="page-students" class="page">
+      <div class="page-header">
+        <div class="page-title">Students</div>
+        <div class="page-sub" id="studentsSummary">Roster and per-student attendance.</div>
       </div>
-      <div class="metric-grid">
-        <div class="metric-card"><div class="num" id="hPresentTotal" style="color:var(--good);">0</div><div class="lbl">Present</div></div>
-        <div class="metric-card"><div class="num" id="hAbsentTotal" style="color:var(--bad);">0</div><div class="lbl">Absent</div></div>
+      <div class="card fade-panel">
+        <table>
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th class="center">Present</th>
+              <th class="center">Sessions</th>
+              <th class="right" style="width:160px;">Attendance</th>
+            </tr>
+          </thead>
+          <tbody id="studentsBody"></tbody>
+        </table>
       </div>
-      <div class="list" id="historyDetailList"></div>
     </div>
-  </div>
 
-  <!-- DASHBOARD TAB -->
-  <div id="tab-dashboard" class="hidden fade-panel">
-    <div class="card">
-      <h3 style="margin-top:0;">Attendance dashboard</h3>
-      <div class="sub" id="dashboardSummary" style="margin-bottom:16px; margin-left:0;"></div>
-      <table>
-        <thead>
-          <tr>
-            <th>Student</th>
-            <th class="center">Present</th>
-            <th class="center">Sessions</th>
-            <th class="right" style="width:160px;">Attendance</th>
-          </tr>
-        </thead>
-        <tbody id="dashboardBody"></tbody>
-      </table>
+    <div id="page-analytics" class="page">
+      <div class="page-header">
+        <div class="page-title">Analytics</div>
+        <div class="page-sub">Overview of attendance insights.</div>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:14px;">
+        <div class="kpi-card">
+          <div class="kpi-label">Average attendance</div>
+          <div class="kpi-value" id="kpiAvg">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total sessions</div>
+          <div class="kpi-value" id="kpiSessions">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total students</div>
+          <div class="kpi-value" id="kpiStudents">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Below 75%</div>
+          <div class="kpi-value" id="kpiAtRisk" style="color:var(--bad);">—</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card fade-panel">
+          <div class="card-title">Attendance trend</div>
+          <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+        </div>
+        <div class="card fade-panel">
+          <div class="card-title">Attendance distribution</div>
+          <div class="chart-wrap"><canvas id="distChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card fade-panel">
+        <div class="card-title">Lowest attendance</div>
+        <div id="riskList"></div>
+      </div>
     </div>
+
   </div>
 </div>
 
 <canvas id="confettiCanvas" style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999;"></canvas>
 
 <script>
-// ---------- Theme (runs first, independent of Firebase/roster) ----------
+if (typeof SECTIONS === 'undefined') {
+  document.body.innerHTML = '<div style="max-width:600px;margin:60px auto;padding:24px;font-family:sans-serif;background:#fdeeed;border:1px solid #c0362c;border-radius:12px;color:#c0362c;">' +
+    '<strong>roster.js is out of date.</strong><br>This page needs the newer roster.js (with SECTIONS). ' +
+    'Please re-upload the latest roster.js to your GitHub repo alongside this file, then refresh.' +
+    '</div>';
+  throw new Error('SECTIONS not defined — stale roster.js');
+}
+
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   const icon = document.getElementById('themeIcon');
@@ -387,22 +465,16 @@ function applyTheme(theme) {
 }
 const savedTheme = localStorage.getItem('dtai_theme') || 'light';
 applyTheme(savedTheme);
-const themeToggleEl = document.getElementById('themeToggle');
-if (themeToggleEl) {
-  themeToggleEl.onclick = () => {
-    const current = document.documentElement.getAttribute('data-theme');
-    applyTheme(current === 'dark' ? 'light' : 'dark');
-  };
-}
+document.getElementById('themeToggle').onclick = () => {
+  const current = document.documentElement.getAttribute('data-theme');
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+  refreshActivePage();
+};
 
-// ---------- Date autofill (runs first, independent of Firebase/roster) ----------
 const sessionDateEl = document.getElementById('sessionDate');
 if (sessionDateEl) {
   const now = new Date();
-  const localDateStr = now.getFullYear() + '-' +
-    String(now.getMonth() + 1).padStart(2, '0') + '-' +
-    String(now.getDate()).padStart(2, '0');
-  sessionDateEl.value = localDateStr;
+  sessionDateEl.value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
 }
 
 const db = firebase.database();
@@ -412,46 +484,16 @@ let qrRotationTimer = null;
 let sessionCheckinsListener = null;
 let soundOn = true;
 let knownCheckins = new Set();
+let trendChartInstance = null;
+let distChartInstance = null;
 const QR_ROTATE_SECONDS = 45;
-
-if (typeof SECTIONS === 'undefined') {
-  document.body.innerHTML = '<div style="max-width:600px;margin:60px auto;padding:24px;font-family:sans-serif;background:#fbeaea;border:1px solid #b03030;border-radius:12px;color:#b03030;">' +
-    '<strong>roster.js is out of date.</strong><br>This page needs the newer roster.js (with SECTIONS). ' +
-    'Please re-upload the latest roster.js to your GitHub repo alongside this file, then refresh.' +
-    '</div>';
-  throw new Error('SECTIONS not defined — stale roster.js');
-}
 
 const sectionKeys = Object.keys(SECTIONS);
 let currentSectionKey = localStorage.getItem('dtai_section') || sectionKeys[0];
 if (!SECTIONS[currentSectionKey]) currentSectionKey = sectionKeys[0];
 
-function currentRoster() {
-  return SECTIONS[currentSectionKey].roster;
-}
-function sessionsBasePath() {
-  return 'sessions/' + currentSectionKey;
-}
-
-// ---------- Section picker ----------
-function renderSectionPicker() {
-  const picker = document.getElementById('sectionPicker');
-  picker.innerHTML = sectionKeys.map(key => `
-    <div class="section-chip ${key === currentSectionKey ? 'active' : ''}" data-section="${key}">${SECTIONS[key].label}</div>
-  `).join('');
-  picker.querySelectorAll('[data-section]').forEach(chip => {
-    chip.onclick = () => {
-      currentSectionKey = chip.getAttribute('data-section');
-      localStorage.setItem('dtai_section', currentSectionKey);
-      renderSectionPicker();
-      resetLiveView();
-      const activeTab = document.querySelector('.tab.active').dataset.tab;
-      if (activeTab === 'history') loadHistory();
-      if (activeTab === 'dashboard') loadDashboard();
-    };
-  });
-}
-renderSectionPicker();
+function currentRoster() { return SECTIONS[currentSectionKey].roster; }
+function sessionsBasePath() { return 'sessions/' + currentSectionKey; }
 
 function fireConfetti() {
   const canvas = document.getElementById('confettiCanvas');
@@ -463,7 +505,7 @@ function fireConfetti() {
   canvas.style.height = window.innerHeight + 'px';
   ctx.scale(dpr, dpr);
 
-  const colors = ['#ff7a45', '#b5541f', '#3ddc84', '#f4e6dc', '#ffd166'];
+  const colors = ['#d4562a', '#ff8452', '#16803c', '#fdeee6', '#f2c94c'];
   const originX = window.innerWidth / 2;
   const originY = window.innerHeight * 0.3;
   const particles = [];
@@ -474,53 +516,52 @@ function fireConfetti() {
     const speed = 3 + Math.random() * 7;
     particles.push({
       x: originX, y: originY,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - 3,
-      size: 4 + Math.random() * 5,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      rotation: Math.random() * 360,
-      rotSpeed: (Math.random() - 0.5) * 20,
-      shape: Math.random() > 0.5 ? 'rect' : 'circle',
-      life: 1
+      vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 3,
+      size: 4 + Math.random() * 5, color: colors[Math.floor(Math.random() * colors.length)],
+      rotation: Math.random() * 360, rotSpeed: (Math.random() - 0.5) * 20,
+      shape: Math.random() > 0.5 ? 'rect' : 'circle', life: 1
     });
   }
 
   let frame = 0;
   const maxFrames = 100;
-
   function step() {
     frame++;
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     particles.forEach(p => {
-      p.vy += 0.15;
-      p.x += p.vx;
-      p.y += p.vy;
-      p.rotation += p.rotSpeed;
+      p.vy += 0.15; p.x += p.vx; p.y += p.vy; p.rotation += p.rotSpeed;
       p.life = 1 - (frame / maxFrames);
-
       ctx.save();
       ctx.globalAlpha = Math.max(p.life, 0);
       ctx.translate(p.x, p.y);
       ctx.rotate((p.rotation * Math.PI) / 180);
       ctx.fillStyle = p.color;
-      if (p.shape === 'rect') {
-        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
-      } else {
-        ctx.beginPath();
-        ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      if (p.shape === 'rect') ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.6);
+      else { ctx.beginPath(); ctx.arc(0,0,p.size/2,0,Math.PI*2); ctx.fill(); }
       ctx.restore();
     });
-
-    if (frame < maxFrames) {
-      requestAnimationFrame(step);
-    } else {
-      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-    }
+    if (frame < maxFrames) requestAnimationFrame(step);
+    else ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
   }
   requestAnimationFrame(step);
 }
+
+function renderSectionPicker() {
+  const picker = document.getElementById('sectionPicker');
+  picker.innerHTML = sectionKeys.map(key => `
+    <div class="section-chip ${key === currentSectionKey ? 'active' : ''}" data-section="${key}">${SECTIONS[key].label}</div>
+  `).join('');
+  picker.querySelectorAll('[data-section]').forEach(chip => {
+    chip.onclick = () => {
+      currentSectionKey = chip.getAttribute('data-section');
+      localStorage.setItem('dtai_section', currentSectionKey);
+      renderSectionPicker();
+      resetLiveView();
+      refreshActivePage();
+    };
+  });
+}
+renderSectionPicker();
 
 function resetLiveView() {
   if (qrRotationTimer) clearInterval(qrRotationTimer);
@@ -532,27 +573,25 @@ function resetLiveView() {
   document.getElementById('reviewCard').classList.add('hidden');
 }
 
-// ---------- Tabs ----------
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.onclick = () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    ['live','history','dashboard'].forEach(name => {
-      const el = document.getElementById('tab-' + name);
-      const isTarget = name === tab.dataset.tab;
-      el.classList.toggle('hidden', !isTarget);
-      if (isTarget) {
-        el.classList.remove('fade-panel');
-        void el.offsetWidth;
-        el.classList.add('fade-panel');
-      }
-    });
-    if (tab.dataset.tab === 'history') loadHistory();
-    if (tab.dataset.tab === 'dashboard') loadDashboard();
+function refreshActivePage() {
+  const active = document.querySelector('.nav-item.active').dataset.page;
+  if (active === 'sessions') loadHistory();
+  if (active === 'students') loadStudents();
+  if (active === 'analytics') loadAnalytics();
+}
+
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.onclick = () => {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + item.dataset.page).classList.add('active');
+    if (item.dataset.page === 'sessions') loadHistory();
+    if (item.dataset.page === 'students') loadStudents();
+    if (item.dataset.page === 'analytics') loadAnalytics();
   };
 });
 
-// ---------- Sound ----------
 function beep() {
   if (!soundOn) return;
   try {
@@ -571,7 +610,6 @@ document.getElementById('pingToggleBtn').onclick = (e) => {
   e.target.textContent = 'Sound: ' + (soundOn ? 'on' : 'off');
 };
 
-// ---------- Live session ----------
 document.getElementById('startBtn').onclick = async () => {
   const date = document.getElementById('sessionDate').value;
   const cap = parseInt(document.getElementById('headcount').value, 10);
@@ -579,13 +617,7 @@ document.getElementById('startBtn').onclick = async () => {
 
   currentSessionId = date + '_' + Date.now();
   sessionRef = db.ref(sessionsBasePath() + '/' + currentSessionId);
-  await sessionRef.set({
-    date: date,
-    cap: cap,
-    createdAt: Date.now(),
-    status: 'open',
-    checkins: {}
-  });
+  await sessionRef.set({ date, cap, createdAt: Date.now(), status: 'open', checkins: {} });
 
   knownCheckins = new Set();
   document.getElementById('setupCard').classList.add('hidden');
@@ -601,23 +633,15 @@ document.getElementById('startBtn').onclick = async () => {
     const rolls = Object.keys(checkins);
     const count = rolls.length;
     let hasNew = false;
-
-    rolls.forEach(r => {
-      if (!knownCheckins.has(r)) { knownCheckins.add(r); beep(); hasNew = true; }
-    });
+    rolls.forEach(r => { if (!knownCheckins.has(r)) { knownCheckins.add(r); beep(); hasNew = true; } });
 
     const countEl = document.getElementById('checkedInCount');
     countEl.textContent = count;
-    if (hasNew) {
-      countEl.classList.remove('bump');
-      void countEl.offsetWidth;
-      countEl.classList.add('bump');
-    }
+    if (hasNew) { countEl.classList.remove('bump'); void countEl.offsetWidth; countEl.classList.add('bump'); }
+
     const wasFull = document.getElementById('capWarning').classList.contains('hidden') === false;
     document.getElementById('capWarning').classList.toggle('hidden', count < cap);
-    if (count >= cap && !wasFull) {
-      fireConfetti();
-    }
+    if (count >= cap && !wasFull) fireConfetti();
 
     renderScanFeed(checkins);
   });
@@ -626,12 +650,7 @@ document.getElementById('startBtn').onclick = async () => {
 function renderScanFeed(checkins) {
   const feedEl = document.getElementById('scanFeed');
   const entries = Object.entries(checkins).sort((a, b) => (b[1].time || 0) - (a[1].time || 0));
-
-  if (entries.length === 0) {
-    feedEl.innerHTML = '<div class="empty-state" id="scanFeedEmpty">Waiting for the first scan…</div>';
-    return;
-  }
-
+  if (entries.length === 0) { feedEl.innerHTML = '<div class="empty-state">Waiting for the first scan…</div>'; return; }
   feedEl.innerHTML = entries.map(([roll, c]) => `
     <div class="feed-row">
       <div><span class="feed-dot"></span><span class="feed-name">${c.name}</span></div>
@@ -647,12 +666,11 @@ function studentUrlFor(sessionId) {
 function generateQR() {
   const qrEl = document.getElementById('qrCanvas');
   const fallbackEl = document.getElementById('qrFallback');
-  qrEl.innerHTML = '';
-  fallbackEl.innerHTML = '';
+  qrEl.innerHTML = ''; fallbackEl.innerHTML = '';
   const url = studentUrlFor(currentSessionId);
   try {
     if (typeof QRCode === 'undefined') throw new Error('QR library not loaded');
-    new QRCode(qrEl, { text: url, width: 240, height: 240 });
+    new QRCode(qrEl, { text: url, width: 220, height: 220 });
   } catch (err) {
     fallbackEl.innerHTML = 'QR code failed to load. Share this link instead:<br><a href="' + url + '">' + url + '</a>';
   }
@@ -660,21 +678,16 @@ function generateQR() {
 
 function startQRRotation() {
   const ring = document.getElementById('qrRingProgress');
-  const circumference = 2 * Math.PI * 140;
+  const circumference = 2 * Math.PI * 126;
   ring.style.strokeDasharray = circumference;
   ring.style.strokeDashoffset = 0;
   let elapsed = 0;
-
   if (qrRotationTimer) clearInterval(qrRotationTimer);
   qrRotationTimer = setInterval(() => {
     elapsed += 0.1;
     const frac = elapsed / QR_ROTATE_SECONDS;
     ring.style.strokeDashoffset = circumference * frac;
-    if (elapsed >= QR_ROTATE_SECONDS) {
-      elapsed = 0;
-      ring.style.strokeDashoffset = 0;
-      generateQR();
-    }
+    if (elapsed >= QR_ROTATE_SECONDS) { elapsed = 0; ring.style.strokeDashoffset = 0; generateQR(); }
   }, 100);
 }
 
@@ -689,43 +702,26 @@ document.getElementById('closeBtn').onclick = async () => {
   window._sessionId = currentSessionId;
   window._sessionSection = currentSectionKey;
 
-  renderReview(data, 'reviewCard', 'presentTotal', 'absentTotal', 'fullList', true, currentSectionKey);
-
+  renderReview(data, 'presentTotal', 'absentTotal', 'fullList', true, currentSectionKey);
   document.getElementById('liveCard').classList.add('hidden');
   document.getElementById('reviewCard').classList.remove('hidden');
 };
 
-function renderReview(data, cardId, presentId, absentId, listId, allowOverride, sectionKey) {
+function renderReview(data, presentId, absentId, listId, allowOverride, sectionKey) {
   const roster = SECTIONS[sectionKey].roster;
   const checkins = data.checkins || {};
   const presentRolls = new Set(Object.keys(checkins));
-  const presentCount = presentRolls.size;
-  const absentCount = roster.length - presentCount;
-
-  document.getElementById(presentId).textContent = presentCount;
-  document.getElementById(absentId).textContent = absentCount;
+  document.getElementById(presentId).textContent = presentRolls.size;
+  document.getElementById(absentId).textContent = roster.length - presentRolls.size;
 
   const listEl = document.getElementById(listId);
   listEl.innerHTML = roster.map(s => {
     const isPresent = presentRolls.has(s.roll);
-    const badge = isPresent
-      ? '<span class="badge present">Present</span>'
-      : '<span class="badge absent">Absent</span>';
+    const badge = isPresent ? '<span class="badge present">Present</span>' : '<span class="badge absent">Absent</span>';
     const overrideBtn = allowOverride
       ? `<button class="override-btn" data-override="${s.roll}" data-current="${isPresent ? 'present' : 'absent'}">${isPresent ? 'Mark absent' : 'Mark present'}</button>`
       : '';
-    return `
-      <div class="list-row">
-        <div class="name-block">
-          <span>${s.name}</span>
-          <span class="roll">${s.roll}</span>
-        </div>
-        <div style="display:flex; align-items:center; gap:10px;">
-          ${badge}
-          ${overrideBtn}
-        </div>
-      </div>
-    `;
+    return `<div class="list-row"><div class="name-block"><span>${s.name}</span><span class="roll">${s.roll}</span></div><div style="display:flex; align-items:center; gap:10px;">${badge}${overrideBtn}</div></div>`;
   }).join('');
 
   if (allowOverride) {
@@ -734,15 +730,14 @@ function renderReview(data, cardId, presentId, absentId, listId, allowOverride, 
         const roll = btn.getAttribute('data-override');
         const current = btn.getAttribute('data-current');
         const targetRef = db.ref('sessions/' + sectionKey + '/' + window._sessionId + '/checkins/' + roll);
-        if (current === 'present') {
-          await targetRef.remove();
-        } else {
+        if (current === 'present') await targetRef.remove();
+        else {
           const student = roster.find(s => s.roll === roll);
           await targetRef.set({ name: student.name, time: Date.now(), overrideByTeacher: true });
         }
         const freshSnap = await db.ref('sessions/' + sectionKey + '/' + window._sessionId).once('value');
         window._sessionData = freshSnap.val();
-        renderReview(window._sessionData, cardId, presentId, absentId, listId, allowOverride, sectionKey);
+        renderReview(window._sessionData, presentId, absentId, listId, allowOverride, sectionKey);
       };
     });
   }
@@ -754,8 +749,7 @@ function exportCSV(data, filenamePrefix, sectionKey) {
   const rows = [['Roll No', 'Name', 'Status', 'Timestamp']];
   roster.forEach(s => {
     const c = checkins[s.roll];
-    const status = c ? 'Present' : 'Absent';
-    rows.push([s.roll, s.name, status, c ? new Date(c.time).toLocaleString() : '']);
+    rows.push([s.roll, s.name, c ? 'Present' : 'Absent', c ? new Date(c.time).toLocaleString() : '']);
   });
   const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
@@ -768,7 +762,6 @@ function exportCSV(data, filenamePrefix, sectionKey) {
 document.getElementById('exportBtn').onclick = () => exportCSV(window._sessionData, 'attendance', window._sessionSection);
 document.getElementById('newSessionBtn').onclick = () => location.reload();
 
-// ---------- History ----------
 async function loadHistory() {
   const listEl = document.getElementById('historyList');
   listEl.innerHTML = '<div class="empty-state">Loading…</div>';
@@ -784,7 +777,6 @@ async function loadHistory() {
   }
 
   const ids = Object.keys(sessions).sort((a, b) => (sessions[b].createdAt || 0) - (sessions[a].createdAt || 0));
-
   if (ids.length === 0) {
     listEl.innerHTML = '<div class="empty-state">No sessions recorded yet for ' + SECTIONS[currentSectionKey].label + '.</div>';
     return;
@@ -793,15 +785,7 @@ async function loadHistory() {
   listEl.innerHTML = ids.map(id => {
     const s = sessions[id];
     const present = Object.keys(s.checkins || {}).length;
-    return `
-      <div class="session-row" data-session="${id}">
-        <div>
-          <div>${s.date}</div>
-          <div class="session-meta">${s.status === 'closed' ? 'Closed' : 'Open'}</div>
-        </div>
-        <div class="session-meta">${present}/${s.cap} present</div>
-      </div>
-    `;
+    return `<div class="session-row" data-session="${id}"><div><div>${s.date}</div><div class="session-meta">${s.status === 'closed' ? 'Closed' : 'Open'}</div></div><div class="session-meta">${present}/${s.cap} present</div></div>`;
   }).join('');
 
   const sectionAtLoad = currentSectionKey;
@@ -813,42 +797,45 @@ async function loadHistory() {
 function showHistoryDetail(sessionId, data, sectionKey) {
   document.getElementById('historyDetailCard').classList.remove('hidden');
   document.getElementById('historyDetailTitle').textContent = 'Session — ' + data.date;
-  renderReview(data, 'historyDetailCard', 'hPresentTotal', 'hAbsentTotal', 'historyDetailList', false, sectionKey);
+  renderReview(data, 'hPresentTotal', 'hAbsentTotal', 'historyDetailList', false, sectionKey);
   document.getElementById('historyExportBtn').onclick = () => exportCSV(data, 'attendance', sectionKey);
 }
 
-// ---------- Dashboard ----------
-async function loadDashboard() {
-  const body = document.getElementById('dashboardBody');
-  const summary = document.getElementById('dashboardSummary');
-  body.innerHTML = '<tr><td colspan="4" class="empty-state">Loading…</td></tr>';
-
+async function computeAttendanceData() {
   const roster = currentRoster();
-  let sessions;
-  try {
-    const snap = await db.ref(sessionsBasePath()).once('value');
-    sessions = snap.val() || {};
-  } catch (err) {
-    body.innerHTML = '<tr><td colspan="4" class="empty-state">Could not load data. Check your Firebase database rules allow reading "sessions".</td></tr>';
-    return;
-  }
-
-  const closedSessions = Object.values(sessions).filter(s => s.status === 'closed');
-
-  summary.textContent = SECTIONS[currentSectionKey].label + ' · ' + closedSessions.length + ' closed session' + (closedSessions.length === 1 ? '' : 's') + ' recorded';
+  const snap = await db.ref(sessionsBasePath()).once('value');
+  const sessions = snap.val() || {};
+  const closedSessions = Object.values(sessions).filter(s => s.status === 'closed')
+    .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
 
   const perStudent = {};
-  roster.forEach(s => perStudent[s.roll] = { name: s.name, present: 0, total: 0 });
+  roster.forEach(s => perStudent[s.roll] = { name: s.name, roll: s.roll, present: 0, total: 0 });
 
   closedSessions.forEach(session => {
     const checkins = session.checkins || {};
     roster.forEach(s => {
       perStudent[s.roll].total++;
-      if (checkins[s.roll]) {
-        perStudent[s.roll].present++;
-      }
+      if (checkins[s.roll]) perStudent[s.roll].present++;
     });
   });
+
+  return { roster, closedSessions, perStudent };
+}
+
+async function loadStudents() {
+  const body = document.getElementById('studentsBody');
+  const summary = document.getElementById('studentsSummary');
+  body.innerHTML = '<tr><td colspan="4" class="empty-state">Loading…</td></tr>';
+
+  let data;
+  try { data = await computeAttendanceData(); }
+  catch (err) {
+    body.innerHTML = '<tr><td colspan="4" class="empty-state">Could not load data. Check Firebase rules.</td></tr>';
+    return;
+  }
+
+  const { roster, closedSessions, perStudent } = data;
+  summary.textContent = SECTIONS[currentSectionKey].label + ' · ' + roster.length + ' students · ' + closedSessions.length + ' session' + (closedSessions.length === 1 ? '' : 's') + ' recorded';
 
   if (roster.length === 0) {
     body.innerHTML = '<tr><td colspan="4" class="empty-state">No students added to this section yet.</td></tr>';
@@ -858,24 +845,112 @@ async function loadDashboard() {
   body.innerHTML = roster.map((s, i) => {
     const d = perStudent[s.roll];
     const pct = d.total > 0 ? Math.round((d.present / d.total) * 100) : 0;
-    const barColor = pct >= 75 ? 'var(--good)' : pct >= 50 ? '#d69420' : 'var(--bad)';
+    const barColor = pct >= 75 ? 'var(--good)' : pct >= 50 ? 'var(--warn)' : 'var(--bad)';
     const pctClass = pct >= 75 ? 'pct-good' : pct >= 50 ? 'pct-warn' : 'pct-bad';
-    return `
-      <tr>
-        <td>${s.name}<div class="session-meta">${s.roll}</div></td>
-        <td class="center">${d.present}</td>
-        <td class="center">${d.total}</td>
-        <td class="right">
-          <div style="display:flex; align-items:center; gap:10px; justify-content:flex-end;">
-            <div style="flex:1; max-width:80px; height:6px; background:var(--line); border-radius:3px; overflow:hidden;">
-              <div style="height:100%; width:${pct}%; background:${barColor}; border-radius:3px; transform-origin:left; animation: barGrow 0.5s ease ${Math.min(i,20)*0.02}s backwards;"></div>
-            </div>
-            <span class="${pctClass}" style="min-width:38px; text-align:right;">${d.total > 0 ? pct + '%' : '—'}</span>
-          </div>
-        </td>
-      </tr>
-    `;
+    return `<tr><td>${s.name}<div class="session-meta">${s.roll}</div></td><td class="center">${d.present}</td><td class="center">${d.total}</td><td class="right"><div style="display:flex; align-items:center; gap:10px; justify-content:flex-end;"><div style="flex:1; max-width:80px; height:6px; background:var(--line); border-radius:3px; overflow:hidden;"><div style="height:100%; width:${pct}%; background:${barColor}; border-radius:3px; transform-origin:left; animation: barGrow 0.5s ease ${Math.min(i,20)*0.02}s backwards;"></div></div><span class="${pctClass}" style="min-width:38px; text-align:right;">${d.total > 0 ? pct + '%' : '—'}</span></div></td></tr>`;
   }).join('');
+}
+
+async function loadAnalytics() {
+  document.getElementById('kpiAvg').textContent = '…';
+  document.getElementById('kpiSessions').textContent = '…';
+  document.getElementById('kpiStudents').textContent = '…';
+  document.getElementById('kpiAtRisk').textContent = '…';
+
+  let data;
+  try { data = await computeAttendanceData(); }
+  catch (err) { return; }
+
+  const { roster, closedSessions, perStudent } = data;
+
+  document.getElementById('kpiSessions').textContent = closedSessions.length;
+  document.getElementById('kpiStudents').textContent = roster.length;
+
+  const studentList = Object.values(perStudent);
+  const avgPct = studentList.length && closedSessions.length
+    ? Math.round(studentList.reduce((sum, s) => sum + (s.total > 0 ? s.present / s.total : 0), 0) / studentList.length * 100)
+    : 0;
+  document.getElementById('kpiAvg').textContent = closedSessions.length ? avgPct + '%' : '—';
+
+  const atRisk = studentList.filter(s => s.total > 0 && (s.present / s.total) < 0.75).length;
+  document.getElementById('kpiAtRisk').textContent = closedSessions.length ? atRisk : '—';
+
+  const trendLabels = closedSessions.map(s => s.date);
+  const trendData = closedSessions.map(s => {
+    const checkins = s.checkins || {};
+    const presentCount = roster.filter(st => checkins[st.roll]).length;
+    return roster.length > 0 ? Math.round((presentCount / roster.length) * 100) : 0;
+  });
+
+  const trendCanvas = document.getElementById('trendChart');
+  if (trendChartInstance) trendChartInstance.destroy();
+  if (typeof Chart !== 'undefined' && closedSessions.length > 0) {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const gridColor = isDark ? '#222225' : '#eaeaea';
+    const textColor = isDark ? '#9a9aa0' : '#6b6b6f';
+    trendChartInstance = new Chart(trendCanvas, {
+      type: 'line',
+      data: {
+        labels: trendLabels,
+        datasets: [{
+          data: trendData, borderColor: '#d4562a', backgroundColor: 'rgba(212,86,42,0.1)',
+          fill: true, tension: 0.35, pointRadius: 3, pointBackgroundColor: '#d4562a', borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { min: 0, max: 100, grid: { color: gridColor }, ticks: { color: textColor, callback: v => v + '%' } },
+          x: { grid: { display: false }, ticks: { color: textColor, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 } }
+        }
+      }
+    });
+  } else if (trendCanvas) {
+    const ctx = trendCanvas.getContext('2d');
+    ctx.clearRect(0, 0, trendCanvas.width, trendCanvas.height);
+  }
+
+  let good = 0, warn = 0, bad = 0;
+  studentList.forEach(s => {
+    if (s.total === 0) return;
+    const pct = s.present / s.total;
+    if (pct >= 0.75) good++;
+    else if (pct >= 0.5) warn++;
+    else bad++;
+  });
+
+  const distCanvas = document.getElementById('distChart');
+  if (distChartInstance) distChartInstance.destroy();
+  if (typeof Chart !== 'undefined' && closedSessions.length > 0) {
+    distChartInstance = new Chart(distCanvas, {
+      type: 'doughnut',
+      data: {
+        labels: ['75% and above', '50% - 75%', 'Below 50%'],
+        datasets: [{ data: [good, warn, bad], backgroundColor: ['#16803c', '#b8790f', '#c0362c'], borderWidth: 0 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '68%',
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 14, font: { size: 11.5 }, color: document.documentElement.getAttribute('data-theme') === 'dark' ? '#9a9aa0' : '#6b6b6f' } } }
+      }
+    });
+  } else if (distCanvas) {
+    const ctx = distCanvas.getContext('2d');
+    ctx.clearRect(0, 0, distCanvas.width, distCanvas.height);
+  }
+
+  const riskList = document.getElementById('riskList');
+  const ranked = studentList.filter(s => s.total > 0).map(s => ({ ...s, pct: Math.round((s.present / s.total) * 100) }))
+    .sort((a, b) => a.pct - b.pct).slice(0, 8);
+
+  if (ranked.length === 0) {
+    riskList.innerHTML = '<div class="empty-state">No closed sessions yet.</div>';
+  } else {
+    riskList.innerHTML = ranked.map((s, i) => {
+      const barColor = s.pct >= 75 ? 'var(--good)' : s.pct >= 50 ? 'var(--warn)' : 'var(--bad)';
+      return `<div class="risk-row"><div class="risk-rank">${i+1}</div><div class="risk-name">${s.name}<div class="risk-roll">${s.roll}</div></div><div class="risk-bar-wrap"><div class="risk-bar" style="width:${s.pct}%; background:${barColor};"></div></div><div class="risk-pct" style="color:${barColor};">${s.pct}%</div></div>`;
+    }).join('');
+  }
 }
 </script>
 </body>
