@@ -152,7 +152,7 @@
       </svg>
     </div>
     <div class="msg" id="errorMsg">Session not found</div>
-    <div class="msg-sub">Ask your instructor to re-display the QR code.</div>
+    <div class="msg-sub" id="errorSub">Ask your instructor to re-display the QR code.</div>
   </div>
 
   <div id="searchState" class="hidden fade-panel">
@@ -215,6 +215,13 @@
 <canvas id="confettiCanvas" style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999;"></canvas>
 
 <script>
+if (typeof SECTIONS === 'undefined') {
+  document.body.innerHTML = '<div style="max-width:480px;margin:60px auto;padding:24px;font-family:sans-serif;background:#fbeaea;border:1px solid #b03030;border-radius:12px;color:#b03030;">' +
+    '<strong>Setup issue.</strong><br>This page could not load the student roster. Please tell your instructor the QR code needs to be re-shared.' +
+    '</div>';
+  throw new Error('SECTIONS not defined — stale roster.js');
+}
+
 const savedTheme = localStorage.getItem('dtai_theme') || 'light';
 document.documentElement.setAttribute('data-theme', savedTheme);
 
@@ -240,11 +247,35 @@ function initials(name) {
 async function init() {
   if (!sessionId) { show('errorState'); return; }
   sessionRef = db.ref('sessions/' + sectionKey + '/' + sessionId);
-  const snap = await sessionRef.once('value');
-  if (!snap.exists()) { show('errorState'); return; }
+
+  let snap;
+  try {
+    const readPromise = sessionRef.once('value');
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('timeout')), 10000)
+    );
+    snap = await Promise.race([readPromise, timeoutPromise]);
+  } catch (err) {
+    document.getElementById('errorMsg').textContent =
+      err.message === 'timeout' ? 'Connection timed out' : 'Could not connect';
+    document.getElementById('errorSub').textContent =
+      err.message === 'timeout'
+        ? 'Check your internet connection and try scanning again.'
+        : 'Ask your instructor to check the session, or try again.';
+    show('errorState');
+    return;
+  }
+
+  if (!snap.exists()) {
+    document.getElementById('errorMsg').textContent = 'Session not found';
+    document.getElementById('errorSub').textContent = 'Ask your instructor to re-display the QR code.';
+    show('errorState');
+    return;
+  }
   sessionData = snap.val();
   if (sessionData.status === 'closed') {
     document.getElementById('errorMsg').textContent = 'Session closed';
+    document.getElementById('errorSub').textContent = 'Attendance for this session is no longer being accepted.';
     show('errorState');
     return;
   }
