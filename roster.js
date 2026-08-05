@@ -145,6 +145,3 @@ const SECTIONS = {
     ]
   }
 };
-
-// Backward-compatible default (Section A) — kept so nothing else breaks silently
-const ROSTER = SECTIONS.sectionA.roster;
