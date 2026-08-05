@@ -1,5 +1,8 @@
-// DTAI Section A roster
-const ROSTER = [
+// DTAI course rosters, keyed by section
+const SECTIONS = {
+  sectionA: {
+    label: "Section A",
+    roster: [
   {roll:"IEP26001", name:"GAURAV KARWA"},
   {roll:"PGP40297", name:"ALISHA LAKRA"},
   {roll:"PGP41004", name:"AMEY RAJUL SHAMKUWAR"},
@@ -68,4 +71,80 @@ const ROSTER = [
   {roll:"PGP41492", name:"MEGHNA SHARMA"},
   {roll:"PGP41505", name:"SHUBHRO JYOTI DEY"},
   {roll:"PGP41514", name:"TRUSHIL CHAUHAN"},
-];
+]
+  },
+  sectionB: {
+    label: "Section B",
+    roster: [
+      {roll:"PGP40285", name:"UDMALE MAYUR TUKARAM"},
+      {roll:"PGP41006", name:"ANSHUL PARATE"},
+      {roll:"PGP41011", name:"DEEPAK CHARNAWAT"},
+      {roll:"PGP41012", name:"GOKUL HARI NAIR"},
+      {roll:"PGP41030", name:"PRATHAMESH KUMBHAR"},
+      {roll:"PGP41032", name:"PUSHKAR MANDAL"},
+      {roll:"PGP41043", name:"SANJAY SINGH SALORA"},
+      {roll:"PGP41052", name:"SREERAJ RAMESAN"},
+      {roll:"PGP41054", name:"THADCHAN M"},
+      {roll:"PGP41057", name:"VIDUSHI SINGH"},
+      {roll:"PGP41061", name:"ADITYA BHATNAGAR"},
+      {roll:"PGP41066", name:"ANJALI KANKARWAL"},
+      {roll:"PGP41080", name:"HRITHIK RAJ BOLLA"},
+      {roll:"PGP41090", name:"NIDHINA O V"},
+      {roll:"PGP41100", name:"SASWATA SAHA"},
+      {roll:"PGP41103", name:"SHINJAN PATRA"},
+      {roll:"PGP41107", name:"SRISHTI LAHIRI"},
+      {roll:"PGP41109", name:"SUPRATIK SARKAR"},
+      {roll:"PGP41114", name:"VYAWHARE CHAITANYA RAVINDRA"},
+      {roll:"PGP41126", name:"ASTHA SAIKIA"},
+      {roll:"PGP41134", name:"GOYAL NISHTHA BRAJESH"},
+      {roll:"PGP41138", name:"KALLEPALLI HEMANTH"},
+      {roll:"PGP41144", name:"MADHUGOGUL P"},
+      {roll:"PGP41153", name:"NITYA RAWAL"},
+      {roll:"PGP41170", name:"SNEHAJIT DEY"},
+      {roll:"PGP41197", name:"KAUSHAL KUMAR"},
+      {roll:"PGP41209", name:"PRACHI GANDHI"},
+      {roll:"PGP41219", name:"SAMALA NISHANTH REDDY"},
+      {roll:"PGP41231", name:"YASHWANTH M"},
+      {roll:"PGP41249", name:"DEBOJYOTI DAS"},
+      {roll:"PGP41251", name:"DESAI YASHRAJ VIJAY"},
+      {roll:"PGP41253", name:"DINAKAR D M"},
+      {roll:"PGP41262", name:"LIDZUSA BESU"},
+      {roll:"PGP41265", name:"MOHIT VIJAY"},
+      {roll:"PGP41266", name:"NANDANA JAYAN"},
+      {roll:"PGP41269", name:"P VYSHNAV SHENOY"},
+      {roll:"PGP41270", name:"PARINISTHA DEV DAS"},
+      {roll:"PGP41275", name:"SAKETH CHAMALLA"},
+      {roll:"PGP41284", name:"UDIT SHARMA"},
+      {roll:"PGP41289", name:"VIVEK UMRAO BANGAR"},
+      {roll:"PGP41291", name:"AAYUSH JAIN"},
+      {roll:"PGP41298", name:"ARITRA GURU"},
+      {roll:"PGP41309", name:"GOURAV"},
+      {roll:"PGP41310", name:"K VENKITA NARAYANAN"},
+      {roll:"PGP41316", name:"MALLENIPALLI GOUTHAM SIDDHARTH"},
+      {roll:"PGP41317", name:"MEHTA DHRUV DHARMESHBHAI"},
+      {roll:"PGP41318", name:"NUPUR KAMALAKAR DANGE"},
+      {roll:"PGP41319", name:"PATEL CHARMIL KANTIBHAI"},
+      {roll:"PGP41353", name:"ANKIT YADAV"},
+      {roll:"PGP41367", name:"KAUSIK BALA"},
+      {roll:"PGP41375", name:"MANDALA VEDHAVYASH"},
+      {roll:"PGP41380", name:"PAKALAPATI PRATYUSHA"},
+      {roll:"PGP41385", name:"PRIYA MANDAL"},
+      {roll:"PGP41394", name:"SHARAD DUBEY"},
+      {roll:"PGP41395", name:"SHELAR SHRUTI RAMESH"},
+      {roll:"PGP41401", name:"VEMAKOTI GOPA GAYATRI"},
+      {roll:"PGP41405", name:"A KARTHICKEYAN"},
+      {roll:"PGP41418", name:"ESHAAN SHARMA"},
+      {roll:"PGP41448", name:"SUSONGITA MANDAL"},
+      {roll:"PGP41455", name:"VUNDI ANJURA"},
+      {roll:"PGP41461", name:"AKANKSHA BHATIA"},
+      {roll:"PGP41462", name:"AKHIL KRISHNA R"},
+      {roll:"PGP41468", name:"BADAVATH GAYATHRI"},
+      {roll:"PGP41508", name:"SONAWANE NIKHIL SANJAY"},
+      {roll:"PGP41512", name:"TANVIR SINGH SAHNI"},
+      {roll:"PHD-26015", name:"PIYUSH KUMAR"},
+    ]
+  }
+};
+
+// Backward-compatible default (Section A) — kept so nothing else breaks silently
+const ROSTER = SECTIONS.sectionA.roster;

@@ -23,7 +23,23 @@
     --good-soft: #e8f3e8;
     --bad: #b03030;
     --bad-soft: #fbeaea;
-    --radius: 12px;
+    --radius: 16px;
+    --shadow: none;
+  }
+  [data-theme="dark"] {
+    --ink: #f2f0ea;
+    --ink-soft: #a8a49c;
+    --ink-faint: #6e6a63;
+    --paper: #0c0c0e;
+    --card: #161618;
+    --line: #262629;
+    --accent: #ff7a45;
+    --accent-soft: #3a2318;
+    --good: #3ddc84;
+    --good-soft: #123321;
+    --bad: #ff5c5c;
+    --bad-soft: #3a1616;
+    --shadow: 0 8px 30px rgba(0,0,0,0.4);
   }
   * { box-sizing: border-box; }
   body {
@@ -32,14 +48,33 @@
     margin: 0;
     padding: 24px 20px 60px;
     color: var(--ink);
+    transition: background 0.3s ease, color 0.3s ease;
   }
   .wrap { max-width: 880px; margin: 0 auto; }
-  .brand-row { display:flex; align-items:center; gap:10px; margin-bottom:2px; }
+
+  .top-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 4px; }
+  .brand-row { display:flex; align-items:center; gap:10px; }
   .node-mark { width:22px; height:22px; flex-shrink:0; }
   .node-mark circle.hub { fill: var(--accent); }
   .node-mark .ring { fill:none; stroke:var(--accent-soft); stroke-width:1.5; }
-  h1 { font-size: 24px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
-  .sub { color: var(--ink-soft); font-size: 14px; margin-bottom: 22px; margin-left: 32px; }
+  h1 { font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
+  .sub { color: var(--ink-soft); font-size: 14px; margin-bottom: 20px; margin-left: 32px; }
+
+  .theme-toggle {
+    display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 20px;
+    background: var(--card); border: 1px solid var(--line); cursor: pointer; font-size: 12px;
+    color: var(--ink-soft); font-weight: 500; transition: all 0.15s;
+  }
+  .theme-toggle:hover { border-color: var(--accent); color: var(--ink); }
+
+  .section-picker { display: flex; gap: 8px; margin-bottom: 20px; margin-left: 32px; }
+  .section-chip {
+    padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--line); color: var(--ink-soft); background: var(--card);
+    transition: all 0.15s;
+  }
+  .section-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .section-chip:hover:not(.active) { border-color: var(--accent); color: var(--ink); }
 
   @keyframes fadeSlideIn {
     from { opacity: 0; transform: translateY(6px); }
@@ -62,10 +97,14 @@
     from { transform: scaleX(0); }
     to { transform: scaleX(1); }
   }
+  @keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,122,69,0.35); }
+    50% { box-shadow: 0 0 0 8px rgba(255,122,69,0); }
+  }
 
   .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
   .tab {
-    padding: 10px 18px; font-size: 14px; font-weight: 500; color: var(--ink-faint);
+    padding: 10px 18px; font-size: 14px; font-weight: 600; color: var(--ink-faint);
     cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
     transition: color 0.15s, border-color 0.15s;
   }
@@ -74,32 +113,33 @@
 
   .card {
     background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
-    padding: 28px; margin-bottom: 16px;
+    padding: 28px; margin-bottom: 16px; box-shadow: var(--shadow);
+    transition: background 0.3s ease, border-color 0.3s ease;
   }
 
   label { display: block; font-size: 13px; color: var(--ink-soft); margin-bottom: 6px; font-weight: 500; }
   input[type=number], input[type=date], input[type=text] {
-    width: 100%; padding: 11px 14px; font-size: 15px; border: 1px solid var(--line);
-    border-radius: 8px; margin-bottom: 18px; background: var(--paper); color: var(--ink);
+    width: 100%; padding: 12px 14px; font-size: 15px; border: 1px solid var(--line);
+    border-radius: 10px; margin-bottom: 18px; background: var(--paper); color: var(--ink);
   }
   input:focus { outline: none; border-color: var(--accent); }
 
   button {
-    background: var(--ink); color: white; border: none; padding: 12px 22px;
-    border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 500;
+    background: var(--ink); color: var(--paper); border: none; padding: 13px 22px;
+    border-radius: 10px; font-size: 14px; cursor: pointer; font-weight: 600;
     transition: opacity 0.15s, transform 0.1s;
   }
   button:hover { opacity: 0.85; }
   button:active { transform: scale(0.98); }
   button.secondary { background: transparent; color: var(--ink); border: 1px solid var(--line); }
-  button.accent { background: var(--accent); }
+  button.accent { background: var(--accent); color: white; }
   button:disabled { opacity: 0.35; cursor: not-allowed; }
   .row { display: flex; gap: 10px; flex-wrap: wrap; }
 
   #qrBox { display: flex; flex-direction: column; align-items: center; padding: 12px; }
-  #qrCanvas { padding: 16px; background: white; border-radius: 10px; border: 1px solid var(--line); position: relative; }
+  #qrCanvas { padding: 16px; background: white; border-radius: 14px; border: 1px solid var(--line); position: relative; }
   #qrCanvas img { display: block; }
-  .qr-ring-wrap { position: relative; width: 260px; height: 260px; margin: 0 auto; }
+  .qr-ring-wrap { position: relative; width: 260px; height: 260px; margin: 0 auto; animation: glowPulse 3s ease infinite; border-radius: 50%; }
   .qr-progress {
     position: absolute; top: -6px; left: -6px; width: calc(100% + 12px); height: calc(100% + 12px);
     pointer-events: none;
@@ -107,71 +147,71 @@
 
   .stat-row { display: flex; gap: 32px; justify-content: center; margin: 22px 0 18px; }
   .stat-item { text-align: center; }
-  .stat { font-size: 40px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
-  .stat-label { color: var(--ink-soft); font-size: 13px; margin-top: 6px; }
+  .stat { font-size: 42px; font-weight: 800; line-height: 1; letter-spacing: -0.03em; }
+  .stat-label { color: var(--ink-soft); font-size: 12px; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
 
-  .list { max-height: 340px; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; }
+  .list { max-height: 340px; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; }
   .list-row {
-    display: flex; align-items: center; justify-content: space-between; padding: 10px 16px;
+    display: flex; align-items: center; justify-content: space-between; padding: 11px 16px;
     border-bottom: 1px solid var(--line); font-size: 14px;
   }
   .list-row:last-child { border-bottom: none; }
   .list-row .name-block { display: flex; align-items: center; gap: 10px; }
   .list-row .roll { color: var(--ink-faint); font-size: 12px; }
   .badge {
-    font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px;
-    text-transform: uppercase; letter-spacing: 0.02em;
+    font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.03em;
   }
   .badge.present { background: var(--good-soft); color: var(--good); }
   .badge.absent { background: var(--bad-soft); color: var(--bad); }
 
   .override-btn {
-    font-size: 12px; padding: 5px 12px; border-radius: 6px; font-weight: 500;
+    font-size: 12px; padding: 6px 12px; border-radius: 8px; font-weight: 600;
     background: transparent; border: 1px solid var(--line); color: var(--ink-soft);
   }
   .override-btn:hover { border-color: var(--ink-faint); color: var(--ink); opacity: 1; }
 
   .warn {
-    background: var(--accent-soft); border: 1px solid #e0bd9e; padding: 12px 16px;
-    border-radius: 8px; font-size: 13px; color: var(--accent); margin-bottom: 16px;
+    background: var(--accent-soft); border: 1px solid var(--accent); padding: 12px 16px;
+    border-radius: 10px; font-size: 13px; color: var(--accent); margin-bottom: 16px; font-weight: 500;
   }
   .link-code {
-    font-family: "SF Mono", Menlo, monospace; font-size: 15px; background: var(--paper);
-    padding: 6px 12px; border-radius: 6px; letter-spacing: 0.5px; color: var(--ink-soft);
+    font-family: "SF Mono", Menlo, monospace; font-size: 14px; background: var(--paper);
+    padding: 7px 14px; border-radius: 20px; letter-spacing: 0.5px; color: var(--ink-soft);
     border: 1px solid var(--line);
   }
   .hidden { display: none !important; }
 
   .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
-  .metric-card { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
-  .metric-card .num { font-size: 26px; font-weight: 700; }
-  .metric-card .lbl { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+  .metric-card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .metric-card .num { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+  .metric-card .lbl { font-size: 12px; color: var(--ink-soft); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.03em; }
 
   table { width: 100%; border-collapse: collapse; }
-  th { text-align: left; font-size: 12px; color: var(--ink-soft); font-weight: 500; padding: 8px 14px; background: var(--paper); }
+  th { text-align: left; font-size: 11px; color: var(--ink-soft); font-weight: 600; padding: 10px 14px; background: var(--paper); text-transform: uppercase; letter-spacing: 0.04em; }
   th.right, td.right { text-align: right; }
   th.center, td.center { text-align: center; }
-  td { padding: 9px 14px; font-size: 14px; border-top: 1px solid var(--line); }
-  .pct-good { color: var(--good); font-weight: 600; }
-  .pct-warn { color: #9a6a00; font-weight: 600; }
-  .pct-bad { color: var(--bad); font-weight: 600; }
+  td { padding: 11px 14px; font-size: 14px; border-top: 1px solid var(--line); }
+  .pct-good { color: var(--good); font-weight: 700; }
+  .pct-warn { color: #e0a030; font-weight: 700; }
+  .pct-bad { color: var(--bad); font-weight: 700; }
 
   .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-faint); font-size: 14px; }
 
   .feed-row {
-    display: flex; align-items: center; justify-content: space-between; padding: 9px 16px;
+    display: flex; align-items: center; justify-content: space-between; padding: 10px 16px;
     border-bottom: 1px solid var(--line); font-size: 13px; animation: rowIn 0.3s ease;
   }
   .feed-row:last-child { border-bottom: none; }
-  .feed-row .feed-name { font-weight: 500; }
+  .feed-row .feed-name { font-weight: 600; }
   .feed-row .feed-time { color: var(--ink-faint); font-size: 12px; font-family: "SF Mono", Menlo, monospace; }
   .feed-dot {
     width: 6px; height: 6px; border-radius: 50%; background: var(--good); display: inline-block;
-    margin-right: 8px; flex-shrink: 0;
+    margin-right: 8px; flex-shrink: 0; box-shadow: 0 0 6px var(--good);
   }
   .session-row {
-    display: flex; align-items: center; justify-content: space-between; padding: 12px 16px;
-    border-bottom: 1px solid var(--line); font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between; padding: 13px 16px;
+    border-bottom: 1px solid var(--line); font-size: 14px; cursor: pointer; transition: background 0.15s;
   }
   .session-row:hover { background: var(--paper); }
   .session-row:last-child { border-bottom: none; }
@@ -180,17 +220,27 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="brand-row">
-    <svg class="node-mark" viewBox="0 0 20 20">
-      <circle class="ring" cx="4" cy="16" r="2.5"/>
-      <circle class="ring" cx="16" cy="16" r="2.5"/>
-      <circle class="hub" cx="10" cy="4" r="3"/>
-      <line x1="10" y1="4" x2="4" y2="16" stroke="var(--accent-soft)" stroke-width="1.2"/>
-      <line x1="10" y1="4" x2="16" y2="16" stroke="var(--accent-soft)" stroke-width="1.2"/>
-    </svg>
-    <h1>DTAI Section A — Attendance</h1>
+  <div class="top-row">
+    <div>
+      <div class="brand-row">
+        <svg class="node-mark" viewBox="0 0 20 20">
+          <circle class="ring" cx="4" cy="16" r="2.5"/>
+          <circle class="ring" cx="16" cy="16" r="2.5"/>
+          <circle class="hub" cx="10" cy="4" r="3"/>
+          <line x1="10" y1="4" x2="4" y2="16" stroke="var(--accent-soft)" stroke-width="1.2"/>
+          <line x1="10" y1="4" x2="16" y2="16" stroke="var(--accent-soft)" stroke-width="1.2"/>
+        </svg>
+        <h1>DTAI Attendance</h1>
+      </div>
+    </div>
+    <div class="theme-toggle" id="themeToggle">
+      <span id="themeIcon">☾</span>
+      <span id="themeLabel">Dark mode</span>
+    </div>
   </div>
   <div class="sub">Teacher control panel</div>
+
+  <div class="section-picker" id="sectionPicker"></div>
 
   <div class="tabs">
     <div class="tab active" data-tab="live">Live session</div>
@@ -204,7 +254,7 @@
       <label for="sessionDate">Session date</label>
       <input type="date" id="sessionDate">
       <label for="headcount">Expected headcount (count the room first)</label>
-      <input type="number" id="headcount" min="1" max="65" placeholder="e.g. 58">
+      <input type="number" id="headcount" min="1" max="200" placeholder="e.g. 58">
       <button id="startBtn">Start session &amp; generate QR</button>
     </div>
 
@@ -235,7 +285,7 @@
       </div>
       <div id="capWarning" class="warn hidden">Cap reached — no more scans will be accepted.</div>
 
-      <div style="font-weight:500; font-size:13px; color:var(--ink-soft); margin: 20px 0 8px; letter-spacing:0.02em; text-transform:uppercase;">Live scan feed</div>
+      <div style="font-weight:600; font-size:12px; color:var(--ink-soft); margin: 20px 0 8px; letter-spacing:0.04em; text-transform:uppercase;">Live scan feed</div>
       <div class="list" id="scanFeed" style="max-height:180px;">
         <div class="empty-state" id="scanFeedEmpty">Waiting for the first scan…</div>
       </div>
@@ -252,7 +302,7 @@
         <div class="metric-card"><div class="num" id="presentTotal" style="color:var(--good);">0</div><div class="lbl">Present</div></div>
         <div class="metric-card"><div class="num" id="absentTotal" style="color:var(--bad);">0</div><div class="lbl">Absent</div></div>
       </div>
-      <div style="font-weight:500; margin-bottom:8px; font-size:14px;">All students — tap to override</div>
+      <div style="font-weight:600; margin-bottom:8px; font-size:14px;">All students — tap to override</div>
       <div class="list" id="fullList"></div>
       <div class="row" style="margin-top:18px;">
         <button id="exportBtn" class="accent">Export CSV</button>
@@ -284,7 +334,7 @@
   <div id="tab-dashboard" class="hidden fade-panel">
     <div class="card">
       <h3 style="margin-top:0;">Attendance dashboard</h3>
-      <div class="sub" id="dashboardSummary" style="margin-bottom:16px;"></div>
+      <div class="sub" id="dashboardSummary" style="margin-bottom:16px; margin-left:0;"></div>
       <table>
         <thead>
           <tr>
@@ -309,6 +359,61 @@ let sessionCheckinsListener = null;
 let soundOn = true;
 let knownCheckins = new Set();
 const QR_ROTATE_SECONDS = 45;
+
+const sectionKeys = Object.keys(SECTIONS);
+let currentSectionKey = localStorage.getItem('dtai_section') || sectionKeys[0];
+if (!SECTIONS[currentSectionKey]) currentSectionKey = sectionKeys[0];
+
+function currentRoster() {
+  return SECTIONS[currentSectionKey].roster;
+}
+function sessionsBasePath() {
+  return 'sessions/' + currentSectionKey;
+}
+
+// ---------- Theme ----------
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeIcon').textContent = theme === 'dark' ? '☀' : '☾';
+  document.getElementById('themeLabel').textContent = theme === 'dark' ? 'Light mode' : 'Dark mode';
+  localStorage.setItem('dtai_theme', theme);
+}
+const savedTheme = localStorage.getItem('dtai_theme') || 'light';
+applyTheme(savedTheme);
+document.getElementById('themeToggle').onclick = () => {
+  const current = document.documentElement.getAttribute('data-theme');
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+};
+
+// ---------- Section picker ----------
+function renderSectionPicker() {
+  const picker = document.getElementById('sectionPicker');
+  picker.innerHTML = sectionKeys.map(key => `
+    <div class="section-chip ${key === currentSectionKey ? 'active' : ''}" data-section="${key}">${SECTIONS[key].label}</div>
+  `).join('');
+  picker.querySelectorAll('[data-section]').forEach(chip => {
+    chip.onclick = () => {
+      currentSectionKey = chip.getAttribute('data-section');
+      localStorage.setItem('dtai_section', currentSectionKey);
+      renderSectionPicker();
+      resetLiveView();
+      const activeTab = document.querySelector('.tab.active').dataset.tab;
+      if (activeTab === 'history') loadHistory();
+      if (activeTab === 'dashboard') loadDashboard();
+    };
+  });
+}
+renderSectionPicker();
+
+function resetLiveView() {
+  if (qrRotationTimer) clearInterval(qrRotationTimer);
+  if (sessionCheckinsListener && sessionRef) sessionRef.child('checkins').off('value', sessionCheckinsListener);
+  currentSessionId = null;
+  sessionRef = null;
+  document.getElementById('setupCard').classList.remove('hidden');
+  document.getElementById('liveCard').classList.add('hidden');
+  document.getElementById('reviewCard').classList.add('hidden');
+}
 
 // ---------- Tabs ----------
 document.querySelectorAll('.tab').forEach(tab => {
@@ -358,7 +463,7 @@ document.getElementById('startBtn').onclick = async () => {
   if (!date || !cap) { alert('Enter date and headcount'); return; }
 
   currentSessionId = date + '_' + Date.now();
-  sessionRef = db.ref('sessions/' + currentSessionId);
+  sessionRef = db.ref(sessionsBasePath() + '/' + currentSessionId);
   await sessionRef.set({
     date: date,
     cap: cap,
@@ -417,7 +522,7 @@ function renderScanFeed(checkins) {
 }
 
 function studentUrlFor(sessionId) {
-  return location.href.replace('teacher.html', 'student.html') + '?session=' + sessionId;
+  return location.href.replace('teacher.html', 'student.html') + '?session=' + sessionId + '&section=' + currentSectionKey;
 }
 
 function generateQR() {
@@ -461,24 +566,26 @@ document.getElementById('closeBtn').onclick = async () => {
   const data = snap.val();
   window._sessionData = data;
   window._sessionId = currentSessionId;
+  window._sessionSection = currentSectionKey;
 
-  renderReview(data, 'reviewCard', 'presentTotal', 'absentTotal', 'fullList', true);
+  renderReview(data, 'reviewCard', 'presentTotal', 'absentTotal', 'fullList', true, currentSectionKey);
 
   document.getElementById('liveCard').classList.add('hidden');
   document.getElementById('reviewCard').classList.remove('hidden');
 };
 
-function renderReview(data, cardId, presentId, absentId, listId, allowOverride) {
+function renderReview(data, cardId, presentId, absentId, listId, allowOverride, sectionKey) {
+  const roster = SECTIONS[sectionKey].roster;
   const checkins = data.checkins || {};
   const presentRolls = new Set(Object.keys(checkins));
   const presentCount = presentRolls.size;
-  const absentCount = ROSTER.length - presentCount;
+  const absentCount = roster.length - presentCount;
 
   document.getElementById(presentId).textContent = presentCount;
   document.getElementById(absentId).textContent = absentCount;
 
   const listEl = document.getElementById(listId);
-  listEl.innerHTML = ROSTER.map(s => {
+  listEl.innerHTML = roster.map(s => {
     const isPresent = presentRolls.has(s.roll);
     const badge = isPresent
       ? '<span class="badge present">Present</span>'
@@ -505,25 +612,26 @@ function renderReview(data, cardId, presentId, absentId, listId, allowOverride) 
       btn.onclick = async () => {
         const roll = btn.getAttribute('data-override');
         const current = btn.getAttribute('data-current');
-        const targetRef = db.ref('sessions/' + window._sessionId + '/checkins/' + roll);
+        const targetRef = db.ref('sessions/' + sectionKey + '/' + window._sessionId + '/checkins/' + roll);
         if (current === 'present') {
           await targetRef.remove();
         } else {
-          const student = ROSTER.find(s => s.roll === roll);
+          const student = roster.find(s => s.roll === roll);
           await targetRef.set({ name: student.name, time: Date.now(), overrideByTeacher: true });
         }
-        const freshSnap = await db.ref('sessions/' + window._sessionId).once('value');
+        const freshSnap = await db.ref('sessions/' + sectionKey + '/' + window._sessionId).once('value');
         window._sessionData = freshSnap.val();
-        renderReview(window._sessionData, cardId, presentId, absentId, listId, allowOverride);
+        renderReview(window._sessionData, cardId, presentId, absentId, listId, allowOverride, sectionKey);
       };
     });
   }
 }
 
-function exportCSV(data, filenamePrefix) {
+function exportCSV(data, filenamePrefix, sectionKey) {
+  const roster = SECTIONS[sectionKey].roster;
   const checkins = data.checkins || {};
   const rows = [['Roll No', 'Name', 'Status', 'Timestamp']];
-  ROSTER.forEach(s => {
+  roster.forEach(s => {
     const c = checkins[s.roll];
     const status = c ? 'Present' : 'Absent';
     rows.push([s.roll, s.name, status, c ? new Date(c.time).toLocaleString() : '']);
@@ -532,11 +640,11 @@ function exportCSV(data, filenamePrefix) {
   const blob = new Blob([csv], { type: 'text/csv' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `${filenamePrefix}_${data.date}.csv`;
+  a.download = `${filenamePrefix}_${SECTIONS[sectionKey].label.replace(/\s+/g,'')}_${data.date}.csv`;
   a.click();
 }
 
-document.getElementById('exportBtn').onclick = () => exportCSV(window._sessionData, 'attendance');
+document.getElementById('exportBtn').onclick = () => exportCSV(window._sessionData, 'attendance', window._sessionSection);
 document.getElementById('newSessionBtn').onclick = () => location.reload();
 
 // ---------- History ----------
@@ -547,7 +655,7 @@ async function loadHistory() {
 
   let sessions;
   try {
-    const snap = await db.ref('sessions').once('value');
+    const snap = await db.ref(sessionsBasePath()).once('value');
     sessions = snap.val() || {};
   } catch (err) {
     listEl.innerHTML = '<div class="empty-state">Could not load data. Check your Firebase database rules allow reading "sessions".</div>';
@@ -557,7 +665,7 @@ async function loadHistory() {
   const ids = Object.keys(sessions).sort((a, b) => (sessions[b].createdAt || 0) - (sessions[a].createdAt || 0));
 
   if (ids.length === 0) {
-    listEl.innerHTML = '<div class="empty-state">No sessions recorded yet.</div>';
+    listEl.innerHTML = '<div class="empty-state">No sessions recorded yet for ' + SECTIONS[currentSectionKey].label + '.</div>';
     return;
   }
 
@@ -575,16 +683,17 @@ async function loadHistory() {
     `;
   }).join('');
 
+  const sectionAtLoad = currentSectionKey;
   listEl.querySelectorAll('[data-session]').forEach(row => {
-    row.onclick = () => showHistoryDetail(row.getAttribute('data-session'), sessions[row.getAttribute('data-session')]);
+    row.onclick = () => showHistoryDetail(row.getAttribute('data-session'), sessions[row.getAttribute('data-session')], sectionAtLoad);
   });
 }
 
-function showHistoryDetail(sessionId, data) {
+function showHistoryDetail(sessionId, data, sectionKey) {
   document.getElementById('historyDetailCard').classList.remove('hidden');
   document.getElementById('historyDetailTitle').textContent = 'Session — ' + data.date;
-  renderReview(data, 'historyDetailCard', 'hPresentTotal', 'hAbsentTotal', 'historyDetailList', false);
-  document.getElementById('historyExportBtn').onclick = () => exportCSV(data, 'attendance');
+  renderReview(data, 'historyDetailCard', 'hPresentTotal', 'hAbsentTotal', 'historyDetailList', false, sectionKey);
+  document.getElementById('historyExportBtn').onclick = () => exportCSV(data, 'attendance', sectionKey);
 }
 
 // ---------- Dashboard ----------
@@ -593,9 +702,10 @@ async function loadDashboard() {
   const summary = document.getElementById('dashboardSummary');
   body.innerHTML = '<tr><td colspan="4" class="empty-state">Loading…</td></tr>';
 
+  const roster = currentRoster();
   let sessions;
   try {
-    const snap = await db.ref('sessions').once('value');
+    const snap = await db.ref(sessionsBasePath()).once('value');
     sessions = snap.val() || {};
   } catch (err) {
     body.innerHTML = '<tr><td colspan="4" class="empty-state">Could not load data. Check your Firebase database rules allow reading "sessions".</td></tr>';
@@ -604,14 +714,14 @@ async function loadDashboard() {
 
   const closedSessions = Object.values(sessions).filter(s => s.status === 'closed');
 
-  summary.textContent = closedSessions.length + ' closed session' + (closedSessions.length === 1 ? '' : 's') + ' recorded';
+  summary.textContent = SECTIONS[currentSectionKey].label + ' · ' + closedSessions.length + ' closed session' + (closedSessions.length === 1 ? '' : 's') + ' recorded';
 
   const perStudent = {};
-  ROSTER.forEach(s => perStudent[s.roll] = { name: s.name, present: 0, total: 0 });
+  roster.forEach(s => perStudent[s.roll] = { name: s.name, present: 0, total: 0 });
 
   closedSessions.forEach(session => {
     const checkins = session.checkins || {};
-    ROSTER.forEach(s => {
+    roster.forEach(s => {
       perStudent[s.roll].total++;
       if (checkins[s.roll]) {
         perStudent[s.roll].present++;
@@ -619,10 +729,15 @@ async function loadDashboard() {
     });
   });
 
-  body.innerHTML = ROSTER.map((s, i) => {
+  if (roster.length === 0) {
+    body.innerHTML = '<tr><td colspan="4" class="empty-state">No students added to this section yet.</td></tr>';
+    return;
+  }
+
+  body.innerHTML = roster.map((s, i) => {
     const d = perStudent[s.roll];
     const pct = d.total > 0 ? Math.round((d.present / d.total) * 100) : 0;
-    const barColor = pct >= 75 ? 'var(--good)' : pct >= 50 ? '#c98a1f' : 'var(--bad)';
+    const barColor = pct >= 75 ? 'var(--good)' : pct >= 50 ? '#e0a030' : 'var(--bad)';
     const pctClass = pct >= 75 ? 'pct-good' : pct >= 50 ? 'pct-warn' : 'pct-bad';
     return `
       <tr>
