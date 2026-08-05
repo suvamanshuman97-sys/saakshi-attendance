@@ -108,12 +108,6 @@
     from { transform: scaleX(0); }
     to { transform: scaleX(1); }
   }
-  @keyframes glowPulse {
-
-    0%, 100% { box-shadow: 0 0 0 0 rgba(255,122,69,0.35); }
-    50% { box-shadow: 0 0 0 8px rgba(255,122,69,0); }
-  }
-
   .tabs { display: flex; gap: 2px; margin-bottom: 24px; border-bottom: 1px solid var(--line); }
   .tab {
     padding: 9px 16px; font-size: 13.5px; font-weight: 600; color: var(--ink-faint);
@@ -152,12 +146,25 @@
   .row { display: flex; gap: 8px; flex-wrap: wrap; }
 
   #qrBox { display: flex; flex-direction: column; align-items: center; padding: 8px; }
-  #qrCanvas { padding: 16px; background: white; border-radius: var(--radius); box-shadow: var(--shadow-md); position: relative; }
+  #qrCanvas { padding: 16px; background: white; border-radius: var(--radius); box-shadow: var(--shadow-md); position: relative; line-height: 0; }
   #qrCanvas img { display: block; }
-  .qr-ring-wrap { position: relative; width: 260px; height: 260px; margin: 0 auto; animation: glowPulse 3s ease infinite; border-radius: 50%; }
+  .qr-ring-wrap {
+    position: relative; width: 288px; height: 288px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: center;
+  }
   .qr-progress {
-    position: absolute; top: -6px; left: -6px; width: calc(100% + 12px); height: calc(100% + 12px);
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     pointer-events: none;
+  }
+  .qr-pulse-dot {
+    position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 0 0 rgba(212,86,42,0.5);
+    animation: dotPulse 2s ease infinite;
+  }
+  @keyframes dotPulse {
+    0% { box-shadow: 0 0 0 0 rgba(212,86,42,0.5); }
+    70% { box-shadow: 0 0 0 8px rgba(212,86,42,0); }
+    100% { box-shadow: 0 0 0 0 rgba(212,86,42,0); }
   }
 
   .stat-row { display: flex; gap: 32px; justify-content: center; margin: 24px 0 18px; }
@@ -278,12 +285,13 @@
         <div class="link-code" id="sessionCodeDisplay"></div>
         <div style="height:18px"></div>
         <div class="qr-ring-wrap">
-          <svg class="qr-progress" viewBox="0 0 272 272">
-            <circle cx="136" cy="136" r="130" fill="none" stroke="var(--line)" stroke-width="3"/>
-            <circle id="qrRingProgress" cx="136" cy="136" r="130" fill="none" stroke="var(--accent)" stroke-width="3"
-              stroke-linecap="round" transform="rotate(-90 136 136)"/>
+          <svg class="qr-progress" viewBox="0 0 288 288">
+            <circle cx="144" cy="144" r="140" fill="none" stroke="var(--line)" stroke-width="2.5"/>
+            <circle id="qrRingProgress" cx="144" cy="144" r="140" fill="none" stroke="var(--accent)" stroke-width="2.5"
+              stroke-linecap="round" transform="rotate(-90 144 144)"/>
           </svg>
           <div id="qrCanvas"></div>
+          <div class="qr-pulse-dot"></div>
         </div>
         <div style="color:var(--ink-soft); font-size:13px; margin-top:14px;">Scan to mark attendance · code refreshes automatically</div>
         <div id="qrFallback" style="margin-top:10px; font-size:12px; color:var(--ink-faint); word-break:break-all; text-align:center;"></div>
@@ -652,20 +660,22 @@ function generateQR() {
 
 function startQRRotation() {
   const ring = document.getElementById('qrRingProgress');
-  const circumference = 2 * Math.PI * 130;
+  const circumference = 2 * Math.PI * 140;
   ring.style.strokeDasharray = circumference;
+  ring.style.strokeDashoffset = 0;
   let elapsed = 0;
 
   if (qrRotationTimer) clearInterval(qrRotationTimer);
   qrRotationTimer = setInterval(() => {
-    elapsed += 0.2;
+    elapsed += 0.1;
     const frac = elapsed / QR_ROTATE_SECONDS;
-    ring.style.strokeDashoffset = circumference * (1 - frac);
+    ring.style.strokeDashoffset = circumference * frac;
     if (elapsed >= QR_ROTATE_SECONDS) {
       elapsed = 0;
+      ring.style.strokeDashoffset = 0;
       generateQR();
     }
-  }, 200);
+  }, 100);
 }
 
 document.getElementById('closeBtn').onclick = async () => {
