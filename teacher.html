@@ -374,7 +374,13 @@ if (themeToggleEl) {
 
 // ---------- Date autofill (runs first, independent of Firebase/roster) ----------
 const sessionDateEl = document.getElementById('sessionDate');
-if (sessionDateEl) sessionDateEl.valueAsDate = new Date();
+if (sessionDateEl) {
+  const now = new Date();
+  const localDateStr = now.getFullYear() + '-' +
+    String(now.getMonth() + 1).padStart(2, '0') + '-' +
+    String(now.getDate()).padStart(2, '0');
+  sessionDateEl.value = localDateStr;
+}
 
 const db = firebase.database();
 let currentSessionId = null;
